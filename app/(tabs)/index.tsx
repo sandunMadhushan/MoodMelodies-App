@@ -65,7 +65,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardContainer}>
@@ -175,7 +175,7 @@ export default function AuthScreen() {
           </LinearGradient>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -183,6 +183,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F0F8',
+    paddingTop: 0,
   },
   keyboardContainer: {
     flex: 1,
@@ -191,8 +192,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 80,
+    paddingTop: 80,
+    paddingBottom: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
