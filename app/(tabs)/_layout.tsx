@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   return (
@@ -7,11 +6,14 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: { display: 'none' }, // Hide tab bar for auth flow
-      }}>
+      }}
+      initialRouteName="index"
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Auth',
+          href: '/(tabs)',
         }}
       />
     </Tabs>
