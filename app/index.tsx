@@ -13,9 +13,14 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'expo-router';
 
 export default function AuthScreen() {
+  const { signIn, signUp, session } = useAuth();
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,11 +29,12 @@ export default function AuthScreen() {
     lastName: '',
   });
 
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -49,12 +55,28 @@ export default function AuthScreen() {
       }
     }
 
-    // Simulate authentication
-    Alert.alert(
-      'Success',
-      isLogin ? 'Login successful!' : 'Account created successfully!',
-      [{ text: 'OK' }]
-    );
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
+      } else {
+        await signUp({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        });
+        Alert.alert(
+          'Success',
+          'Registration successful! Please check your email to confirm your account.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleAuthMode = () => {
@@ -166,12 +188,16 @@ export default function AuthScreen() {
               </View>
 
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  loading && styles.submitButtonDisabled,
+                ]}
                 onPress={handleSubmit}
                 activeOpacity={0.8}
+                disabled={loading}
               >
                 <Text style={styles.submitButtonText}>
-                  {isLogin ? 'Login' : 'Sign Up'}
+                  {loading ? 'Please wait...' : isLogin ? 'Login' : 'Sign Up'}
                 </Text>
               </TouchableOpacity>
 
@@ -306,5 +332,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
     textDecorationLine: 'underline',
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
 });
