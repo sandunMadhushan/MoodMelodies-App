@@ -1,6 +1,7 @@
 import { Tabs, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const { session } = useAuth();
@@ -8,7 +9,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (!session) {
-      router.replace('/');
+      router.replace('/login');
     }
   }, [session]);
 
@@ -21,13 +22,14 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName="index"
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Auth',
-          href: '/(tabs)',
+          title: 'Home',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={24} color={color} />
+          ),
         }}
       />
     </Tabs>
