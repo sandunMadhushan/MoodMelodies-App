@@ -8,9 +8,18 @@ export default function TabLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!session) {
-      router.replace('/login');
-    }
+    const checkAuth = async () => {
+      console.log(
+        'Checking auth state:',
+        session ? 'Has session' : 'No session'
+      );
+      if (!session) {
+        console.log('No session found, redirecting to login...');
+        router.replace('/login');
+      }
+    };
+
+    checkAuth();
   }, [session]);
 
   if (!session) {

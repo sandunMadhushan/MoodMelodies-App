@@ -12,76 +12,72 @@ import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
 export default function HomeScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/(auth)/login');
   };
+
+  console.log('Home Screen - Current user:', user);
+  console.log('Loading state:', loading);
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      <LinearGradient
+        colors={['#7B0057', '#9B1B6B', '#7B0057']}
+        locations={[0, 0.6, 1]}
+        style={styles.mainContainer}
       >
-        {/* Header with Logo */}
-        <View style={styles.header}>
-          <Image
-            source={require('@/assets/images/Logo Trans.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Main Content */}
-        <LinearGradient
-          colors={['#7B0057', '#9B1B6B', '#7B0057']}
-          locations={[0, 0.6, 1]}
-          style={styles.mainContainer}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.content}>
-            <View style={styles.profileHeader}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarText}>
-                  {user?.firstName?.[0] || ''}
-                  {user?.lastName?.[0] || ''}
-                </Text>
-              </View>
-              <Text style={styles.welcomeText}>
-                Welcome back, {user?.firstName || 'User'}!
+          {/* Header with Logo */}
+          <View style={styles.header}>
+            <Image
+              source={require('@/assets/images/Logo Trans.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Profile Info */}
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Text style={styles.avatarText}>
+                {(user?.full_name || '')[0] || ''}
               </Text>
             </View>
-
-            <View style={styles.infoContainer}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Full Name</Text>
-                <Text style={styles.infoValue}>
-                  {user?.firstName || ''} {user?.lastName || ''}
-                </Text>
-              </View>
-
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Email</Text>
-                <Text style={styles.infoValue}>{user?.email || ''}</Text>
-              </View>
-
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Member Since</Text>
-                <Text style={styles.infoValue}>{user?.createdAt || 'N/A'}</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
+            <Text style={styles.welcomeText}>
+              Welcome back, {user?.full_name?.split(' ')[0] || 'User'}!
+            </Text>
           </View>
-        </LinearGradient>
-      </ScrollView>
+
+          {/* User Info */}
+          <View style={styles.infoContainer}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Full Name</Text>
+              <Text style={styles.infoValue}>{user?.full_name || '--'}</Text>
+            </View>
+            {user?.username && (
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Username</Text>
+                <Text style={styles.infoValue}>{user.username}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </LinearGradient>
     </View>
   );
 }

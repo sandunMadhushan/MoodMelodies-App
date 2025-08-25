@@ -10,11 +10,15 @@ import {
   ScrollView,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
 
 export default function LoginScreen() {
+  const { signIn } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,15 +28,30 @@ export default function LoginScreen() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    // TODO: Implement actual login logic here
-    // For now, simulate successful login and navigate to home
-    router.replace('/(tabs)');
+    try {
+      setIsLoading(true);
+      console.log('Starting login process...');
+      await signIn(formData.email, formData.password);
+      // Add a small delay to ensure user data is loaded
+      console.log('Login successful, waiting for user data...');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Navigating to tabs...');
+      await router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to sign in'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,9 +109,14 @@ export default function LoginScreen() {
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}
+                disabled={isLoading}
                 activeOpacity={0.8}
               >
-                <Text style={styles.submitButtonText}>Login</Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#7B0057" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Login</Text>
+                )}
               </TouchableOpacity>
 
               <View style={styles.switchContainer}>

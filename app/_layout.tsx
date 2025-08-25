@@ -33,6 +33,8 @@ export default function RootLayout() {
     return null;
   }
 
+  console.log('Root layout rendered');
+
   return (
     <AuthProvider>
       <>

@@ -11,10 +11,13 @@ type SignUpData = {
 
 type UserData = {
   id: string;
+  full_name: string;
+  username: string | null;
+  avatar_url: string | null;
+  updated_at: string | null;
+  // Computed properties
   firstName: string;
   lastName: string;
-  email: string;
-  createdAt: string;
 };
 
 type AuthContextType = {
@@ -34,14 +37,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchUserData = async (userId: string) => {
+    console.log('Fetching user data for ID:', userId);
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
-    if (data && !error) {
-      setUser(data as UserData);
+    if (error) {
+      console.error('Error fetching user data:', error.message);
+      return;
+    }
+
+    if (data) {
+      console.log('User data fetched successfully:', data);
+      // Split full_name into firstName and lastName
+      const nameParts = (data.full_name || '').split(' ');
+      const userData: UserData = {
+        ...data,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+      };
+      console.log('Processed user data:', userData);
+      setUser(userData);
+    } else {
+      console.log('No user data found');
     }
   };
 
@@ -90,11 +110,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('Attempting to sign in...');
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) throw error;
+
+    if (error) {
+      console.error('Sign in error:', error.message);
+      throw error;
+    }
+
+    if (!authData.session) {
+      throw new Error('No session returned after sign in');
+    }
+
+    console.log('Sign in successful, setting session...');
+    setSession(authData.session);
+
+    if (authData.session.user) {
+      console.log('Fetching user data for ID:', authData.session.user.id);
+      await fetchUserData(authData.session.user.id);
+    }
   };
 
   const signOut = async () => {
