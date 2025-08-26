@@ -3,38 +3,36 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Image,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 
 export default function HomeScreen() {
-  const { user, signOut, loading } = useAuth();
+  const { user } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace('/(auth)/login');
+  const handleCapture = () => {
+    // TODO: Navigate to camera/mood capture screen
+    console.log('Capture pressed');
   };
 
-  console.log('Home Screen - Current user:', user);
-  console.log('Loading state:', loading);
+  const getUserFirstName = () => {
+    return user?.full_name?.split(' ')[0] || 'User';
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#7B0057', '#9B1B6B', '#7B0057']}
-        locations={[0, 0.6, 1]}
-        style={styles.mainContainer}
+        colors={['#F8E6F1', '#E6B3D6', '#7B0057']}
+        locations={[0, 0.3, 1]}
+        style={styles.gradient}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header with Logo */}
-          <View style={styles.header}>
+        <View style={styles.content}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
             <Image
               source={require('@/assets/images/Logo Trans.png')}
               style={styles.logo}
@@ -42,138 +40,77 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* Profile Info */}
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>
-                {(user?.full_name || '')[0] || ''}
-              </Text>
-            </View>
-            <Text style={styles.welcomeText}>
-              Welcome back, {user?.full_name?.split(' ')[0] || 'User'}!
+          {/* Main Content */}
+          <View style={styles.mainContent}>
+            <Text style={styles.greeting}>Hi {getUserFirstName()} ,</Text>
+            <Text style={styles.tagline}>
+              Discover your mood and find your{'\n'}perfect playlist
             </Text>
-          </View>
 
-          {/* User Info */}
-          <View style={styles.infoContainer}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Full Name</Text>
-              <Text style={styles.infoValue}>{user?.full_name || '--'}</Text>
-            </View>
-            {user?.username && (
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Username</Text>
-                <Text style={styles.infoValue}>{user.username}</Text>
-              </View>
-            )}
+            {/* Capture Button */}
+            <TouchableOpacity
+              style={styles.captureButton}
+              onPress={handleCapture}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.captureButtonText}>Capture</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Logout Button */}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </ScrollView>
+        </View>
       </LinearGradient>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F0F8',
-    paddingTop: 0,
+    backgroundColor: '#F8E6F1',
   },
-  scrollContainer: {
-    flexGrow: 1,
+  gradient: {
+    flex: 1,
   },
-  header: {
-    paddingTop: 80,
-    paddingBottom: 40,
+  content: {
+    flex: 1,
+    paddingHorizontal: 30,
+  },
+  logoContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 60,
+    paddingBottom: 100,
   },
   logo: {
     width: 280,
     height: 40,
   },
-  mainContainer: {
+  mainContent: {
     flex: 1,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingTop: 40,
-    paddingHorizontal: 30,
-    paddingBottom: 30,
-    minHeight: '65%',
-  },
-  content: {
-    flex: 1,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    alignItems: 'center',
+    paddingBottom: 100,
   },
-  avatarText: {
-    fontSize: 32,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#7B0057',
-  },
-  welcomeText: {
-    fontSize: 24,
+  greeting: {
+    fontSize: 48,
     fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
     textAlign: 'center',
-  },
-  infoContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    padding: 24,
     marginBottom: 30,
+    fontWeight: '600',
   },
-  infoItem: {
-    marginBottom: 20,
-  },
-  infoLabel: {
-    fontSize: 14,
+  tagline: {
+    fontSize: 18,
     fontFamily: 'Poppins-Regular',
-    color: '#E8D8E8',
-    opacity: 0.8,
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 26,
+    marginBottom: 60,
+    opacity: 0.9,
   },
-  logoutButton: {
+  captureButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 50,
     paddingVertical: 18,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 'auto',
+    paddingHorizontal: 60,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -183,9 +120,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  logoutButtonText: {
+  captureButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
     color: '#7B0057',
+    fontWeight: '600',
   },
 });
