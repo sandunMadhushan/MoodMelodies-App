@@ -1,57 +1,87 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Image,
-  Dimensions,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-
-const { width, height } = Dimensions.get('window');
+import { faceApiService, MoodResult } from '../lib/faceApiService';
 
 export default function AnalyzingScreen() {
-  const [progress, setProgress] = useState(0);
-  const { photoUri } = useLocalSearchParams();
+  const { photoUri } = useLocalSearchParams<{ photoUri: string }>();
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [moodResult, setMoodResult] = useState<MoodResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const analyzeMood = async () => {
-      try {
-        // Here you would integrate with an emotion detection API
-        // For example, using Microsoft Azure Face API or Google Cloud Vision API
-        
-        // For now, let's simulate a random mood detection
-        const moods = ['Happy', 'Sad', 'Energetic', 'Calm', 'Excited'];
-        const detectedMood = moods[Math.floor(Math.random() * moods.length)];
-        
-        // Navigate to result screen with the detected mood
-        setTimeout(() => {
-          router.replace({
-            pathname: '/mood-result',
-            params: { mood: detectedMood }
-          });
-        }, 2000);
-      } catch (error) {
-        console.error('Error analyzing mood:', error);
-        // Handle error appropriately
-      }
+    if (photoUri) {
+      analyzeMood();
+    }
+  }, [photoUri]);
+
+  const analyzeMood = async () => {
+    try {
+      setIsAnalyzing(true);
+      setError(null);
+
+      console.log('Starting mood analysis...');
+      const result = await faceApiService.analyzeMood(photoUri!);
+
+      setMoodResult(result);
+      setIsAnalyzing(false);
+
+      console.log('Mood analysis complete:', result);
+    } catch (err) {
+      console.error('Mood analysis error:', err);
+      setError(err instanceof Error ? err.message : 'Analysis failed');
+      setIsAnalyzing(false);
+
+      Alert.alert(
+        'Analysis Failed',
+        'Could not analyze your mood. Please try again with a clearer photo.',
+        [{ text: 'Try Again', onPress: () => router.back() }, { text: 'OK' }]
+      );
+    }
+  };
+
+  const handleContinue = () => {
+    if (moodResult) {
+      // Navigate to music tab directly since mood-result route might not be properly configured yet
+      router.push('/(tabs)/music');
+    }
+  };
+
+  const getMoodColor = (mood: string): string => {
+    const moodColors: { [key: string]: string } = {
+      Happy: '#FFD700',
+      Sad: '#4169E1',
+      Angry: '#DC143C',
+      Calm: '#32CD32',
+      Anxious: '#FF8C00',
+      Surprised: '#FF69B4',
+      Disgusted: '#8B4513',
     };
+    return moodColors[mood] || '#FFFFFF';
+  };
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          analyzeMood();
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, []);
+  const getMoodEmoji = (mood: string): string => {
+    const moodEmojis: { [key: string]: string } = {
+      Happy: '😊',
+      Sad: '😢',
+      Angry: '😠',
+      Calm: '😌',
+      Anxious: '😰',
+      Surprised: '😲',
+      Disgusted: '🤢',
+    };
+    return moodEmojis[mood] || '😐';
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -61,57 +91,96 @@ export default function AnalyzingScreen() {
         style={styles.gradient}
       >
         <View style={styles.content}>
-          {/* Title */}
-          <Text style={styles.title}>Analyzing your{'\n'}mood...</Text>
-
-          {/* Phone with Analysis Overlay */}
-          <View style={styles.phoneContainer}>
-            <View style={styles.phone}>
-              {/* Phone Frame */}
-              <View style={styles.phoneFrame}>
-                {/* Notch */}
-                <View style={styles.notch} />
-                
-                {/* Screen Content */}
-                <View style={styles.screen}>
-                  {/* Corner brackets */}
-                  <View style={[styles.bracket, styles.topLeft]} />
-                  <View style={[styles.bracket, styles.topRight]} />
-                  <View style={[styles.bracket, styles.bottomLeft]} />
-                  <View style={[styles.bracket, styles.bottomRight]} />
-                  
-                  {/* Mood indicators */}
-                  <View style={styles.moodIndicators}>
-                    <View style={[styles.moodIcon, styles.sadIcon]}>
-                      <Text style={styles.moodEmoji}>☹️</Text>
-                    </View>
-                    <View style={[styles.moodIcon, styles.happyIcon, styles.activeMood]}>
-                      <Text style={styles.moodEmoji}>😊</Text>
-                    </View>
-                    <View style={[styles.moodIcon, styles.neutralIcon]}>
-                      <Text style={styles.moodEmoji}>😐</Text>
-                    </View>
-                  </View>
-                  
-                  {/* User avatar/photo area */}
-                  <View style={styles.userPhotoArea}>
-                    <View style={styles.userAvatar}>
-                      <View style={styles.avatarHead} />
-                      <View style={styles.avatarBody} />
-                    </View>
-                  </View>
-                </View>
-              </View>
+          {/* Photo Preview */}
+          {photoUri && (
+            <View style={styles.photoContainer}>
+              <Image source={{ uri: photoUri }} style={styles.photo} />
             </View>
-          </View>
+          )}
 
-          {/* Analysis illustration */}
-          <View style={styles.illustrationContainer}>
-            <Image
-              source={{ uri: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-              style={styles.illustration}
-              resizeMode="contain"
-            />
+          {/* Analysis Content */}
+          <View style={styles.analysisContainer}>
+            {isAnalyzing ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.loadingText}>Analyzing your mood...</Text>
+                <Text style={styles.loadingSubtext}>
+                  Using AI to detect facial expressions
+                </Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>😔</Text>
+                <Text style={styles.errorTitle}>Analysis Failed</Text>
+                <Text style={styles.errorMessage}>{error}</Text>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={() => router.back()}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            ) : moodResult ? (
+              <View style={styles.resultContainer}>
+                <Text
+                  style={[
+                    styles.moodEmoji,
+                    { color: getMoodColor(moodResult.mood) },
+                  ]}
+                >
+                  {getMoodEmoji(moodResult.mood)}
+                </Text>
+                <Text style={styles.moodTitle}>Your mood is</Text>
+                <Text
+                  style={[
+                    styles.moodText,
+                    { color: getMoodColor(moodResult.mood) },
+                  ]}
+                >
+                  {moodResult.mood}
+                </Text>
+                <Text style={styles.confidenceText}>
+                  {(moodResult.confidence * 100).toFixed(1)}% confidence
+                </Text>
+
+                {/* Emotion Breakdown */}
+                <View style={styles.emotionsContainer}>
+                  <Text style={styles.emotionsTitle}>Emotion Analysis</Text>
+                  {Object.entries(moodResult.emotions)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 3)
+                    .map(([emotion, value]) => (
+                      <View key={emotion} style={styles.emotionRow}>
+                        <Text style={styles.emotionName}>
+                          {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                        </Text>
+                        <View style={styles.emotionBarContainer}>
+                          <View
+                            style={[
+                              styles.emotionBar,
+                              { width: `${value * 100}%` },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.emotionValue}>
+                          {(value * 100).toFixed(0)}%
+                        </Text>
+                      </View>
+                    ))}
+                </View>
+
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={handleContinue}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.continueButtonText}>
+                    Continue to Music
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
         </View>
       </LinearGradient>
@@ -129,151 +198,159 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: 'center',
-    paddingTop: 80,
     paddingHorizontal: 30,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
-  title: {
-    fontSize: 36,
+  photoContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  photo: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  analysisContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 20,
     fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
+    marginTop: 20,
     textAlign: 'center',
-    marginBottom: 60,
-    lineHeight: 42,
   },
-  phoneContainer: {
+  loadingSubtext: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  errorContainer: {
     alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 60,
+    marginBottom: 20,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  retryButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#7B0057',
+  },
+  resultContainer: {
+    alignItems: 'center',
+  },
+  moodEmoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  moodTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 5,
+  },
+  moodText: {
+    fontSize: 36,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  confidenceText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 30,
+  },
+  emotionsContainer: {
+    width: '100%',
     marginBottom: 40,
   },
-  phone: {
-    position: 'relative',
+  emotionsTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+    textAlign: 'center',
   },
-  phoneFrame: {
-    width: 200,
-    height: 400,
-    backgroundColor: '#000000',
-    borderRadius: 40,
-    padding: 8,
+  emotionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  emotionName: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: '#FFFFFF',
+    width: 80,
+  },
+  emotionBarContainer: {
+    flex: 1,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    marginHorizontal: 10,
+  },
+  emotionBar: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 3,
+  },
+  emotionValue: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    width: 35,
+    textAlign: 'right',
+  },
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 16,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  notch: {
-    position: 'absolute',
-    top: 0,
-    left: '50%',
-    marginLeft: -50,
-    width: 100,
-    height: 25,
-    backgroundColor: '#000000',
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    zIndex: 10,
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 32,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  bracket: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderColor: '#7B0057',
-    borderWidth: 3,
-  },
-  topLeft: {
-    top: 20,
-    left: 20,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-  },
-  topRight: {
-    top: 20,
-    right: 20,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-  },
-  bottomLeft: {
-    bottom: 20,
-    left: 20,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-  },
-  bottomRight: {
-    bottom: 20,
-    right: 20,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-  },
-  moodIndicators: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 30,
-  },
-  moodIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-  },
-  activeMood: {
-    backgroundColor: '#E91E63',
-    transform: [{ scale: 1.2 }],
-  },
-  sadIcon: {},
-  happyIcon: {},
-  neutralIcon: {},
-  moodEmoji: {
-    fontSize: 20,
-  },
-  userPhotoArea: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  userAvatar: {
-    width: 80,
-    height: 100,
-    alignItems: 'center',
-  },
-  avatarHead: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#D4A574',
-    marginBottom: 5,
-  },
-  avatarBody: {
-    width: 60,
-    height: 45,
-    backgroundColor: '#000000',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
-  illustrationContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: 100,
-  },
-  illustration: {
-    width: 200,
-    height: 150,
-    opacity: 0.8,
+  continueButtonText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#7B0057',
+    textAlign: 'center',
   },
 });
