@@ -51,16 +51,30 @@ export default function CaptureScreen() {
   const handleCapture = async () => {
     if (cameraRef.current) {
       try {
-        const photo = await cameraRef.current.takePictureAsync({ base64: true });
-        console.log('Photo captured:', photo);
+        console.log('📸 Starting photo capture...');
+        const photo = await cameraRef.current.takePictureAsync({
+          base64: false, // We'll read the file separately if needed
+          quality: 0.8,
+          skipProcessing: false,
+        });
+        console.log('✅ Photo captured successfully:', {
+          uri: photo.uri,
+          width: photo.width,
+          height: photo.height,
+        });
+
         // Navigate to analyzing screen with photo data
-        router.push({
-          pathname: '/analyzing',
-          params: { photoUri: photo.uri }
+        router.navigate({
+          pathname: '/analyzing' as any,
+          params: { photoUri: photo.uri },
         });
       } catch (error) {
-        console.error('Error capturing photo:', error);
-        Alert.alert('Error', 'Failed to capture photo');
+        console.error('❌ Error capturing photo:', error);
+        Alert.alert(
+          'Capture Error',
+          'Failed to capture photo. Please try again.',
+          [{ text: 'OK' }]
+        );
       }
     }
   };
