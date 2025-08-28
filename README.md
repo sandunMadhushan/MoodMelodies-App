@@ -337,6 +337,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-**Made with ❤️ by [Sandun Madhushan](https://github.com/sandunMadhushan)**
-
 _Transform your emotions into musical experiences_ 🎵✨
