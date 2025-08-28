@@ -7,20 +7,18 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  musicService,
+  Song as MusicSong,
+  Playlist as MusicPlaylist,
+} from '../lib/musicService';
 
 const { width } = Dimensions.get('window');
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  image: string;
-  duration: number;
-}
 
 export default function PlayerScreen() {
   const { playlistName, mood } = useLocalSearchParams<{
@@ -30,44 +28,118 @@ export default function PlayerScreen() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(180); // 3 minutes default
-  const [currentSong, setCurrentSong] = useState<Song>({
-    id: '1',
-    title: playlistName || 'Happier',
-    artist: 'Marshmello, Bastille',
-    image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
-    duration: 180,
-  });
+  const [duration, setDuration] = useState(180);
+  const [currentSong, setCurrentSong] = useState<MusicSong | null>(null);
+  const [playlist, setPlaylist] = useState<MusicPlaylist | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate playback progress
+  // Load playlist on mount
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime((prev) => {
-          if (prev >= duration) {
-            setIsPlaying(false);
-            return 0;
+    loadPlaylist();
+    return () => {
+      // Cleanup on unmount
+      musicService.cleanup();
+    };
+  }, [mood]);
+
+  const loadPlaylist = async () => {
+    try {
+      setIsLoading(true);
+      console.log(`🎵 Loading playlist for mood: ${mood}`);
+
+      const fetchedPlaylist = await musicService.getPlaylistByMood(
+        mood || 'Happy'
+      );
+      setPlaylist(fetchedPlaylist);
+
+      if (fetchedPlaylist.songs.length > 0) {
+        setCurrentSong(fetchedPlaylist.songs[0]);
+        setDuration(fetchedPlaylist.songs[0].duration);
+        console.log(
+          `✅ Loaded playlist: ${fetchedPlaylist.name} (${fetchedPlaylist.songs.length} songs)`
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error loading playlist:', error);
+      Alert.alert('Error', 'Failed to load playlist. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Monitor playback status
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (isPlaying && currentSong) {
+      interval = setInterval(async () => {
+        try {
+          const status = await musicService.getPlaybackStatus();
+          if (status && status.isLoaded) {
+            const position = Math.floor((status.positionMillis || 0) / 1000);
+            const duration = Math.floor((status.durationMillis || 0) / 1000);
+
+            setCurrentTime(position);
+            setDuration(duration);
+
+            // Check if song ended
+            if (status.didJustFinish) {
+              handleNext();
+            }
           }
-          return prev + 1;
-        });
+        } catch (error) {
+          console.error('Error getting playback status:', error);
+        }
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, duration]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, currentSong]);
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+  const togglePlayPause = async () => {
+    if (!currentSong) return;
+
+    try {
+      if (isPlaying) {
+        await musicService.pauseTrack();
+        setIsPlaying(false);
+      } else {
+        if (currentTime === 0) {
+          // Start playing the song
+          await musicService.playTrack(currentSong);
+        } else {
+          // Resume playing
+          await musicService.resumeTrack();
+        }
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+      Alert.alert('Playback Error', 'Failed to play track. Please try again.');
+    }
   };
 
   const handlePrevious = () => {
+    if (!playlist || playlist.songs.length === 0) return;
+
+    const prevIndex =
+      currentIndex > 0 ? currentIndex - 1 : playlist.songs.length - 1;
+    setCurrentIndex(prevIndex);
+    setCurrentSong(playlist.songs[prevIndex]);
     setCurrentTime(0);
-    // TODO: Load previous song
+    setIsPlaying(false);
   };
 
   const handleNext = () => {
+    if (!playlist || playlist.songs.length === 0) return;
+
+    const nextIndex =
+      currentIndex < playlist.songs.length - 1 ? currentIndex + 1 : 0;
+    setCurrentIndex(nextIndex);
+    setCurrentSong(playlist.songs[nextIndex]);
     setCurrentTime(0);
-    // TODO: Load next song
+    setIsPlaying(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -92,6 +164,54 @@ export default function PlayerScreen() {
   };
 
   const [primaryColor, secondaryColor] = getMoodColor(mood || 'Happy');
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={[primaryColor, secondaryColor, '#7B0057']}
+          locations={[0, 0.6, 1]}
+          style={styles.gradient}
+        >
+          <View
+            style={[
+              styles.content,
+              { justifyContent: 'center', alignItems: 'center' },
+            ]}
+          >
+            <Text style={styles.songTitle}>🎵 Loading playlist...</Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
+  if (!currentSong) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={[primaryColor, secondaryColor, '#7B0057']}
+          locations={[0, 0.6, 1]}
+          style={styles.gradient}
+        >
+          <View
+            style={[
+              styles.content,
+              { justifyContent: 'center', alignItems: 'center' },
+            ]}
+          >
+            <Text style={styles.songTitle}>❌ No songs available</Text>
+            <TouchableOpacity
+              style={styles.playButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.songTitle}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
