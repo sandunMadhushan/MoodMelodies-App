@@ -10,13 +10,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { faceApiService } from '../../lib/faceApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const PADDING = 20; // Reduced padding for more space
 const CARD_SPACING = 12; // Space between cards
-const cardWidth = (width - (PADDING * 2) - CARD_SPACING) / 2; // 2 cards per row
+const cardWidth = (width - PADDING * 2 - CARD_SPACING) / 2; // 2 cards per row
 
 interface Playlist {
   id: string;
@@ -56,28 +57,32 @@ export default function MusicScreen() {
           id: '1',
           name: 'Happy Hits',
           description: 'Upbeat songs to keep your energy high',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Happy',
         },
         {
           id: '2',
           name: 'Feel Good Vibes',
           description: 'Songs that make you smile',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Happy',
         },
         {
           id: '3',
           name: 'Dance Party',
           description: 'Get moving with these beats',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Happy',
         },
         {
           id: '4',
           name: 'Summer Vibes',
           description: 'Sunny day soundtrack',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Happy',
         },
       ],
@@ -86,28 +91,32 @@ export default function MusicScreen() {
           id: '5',
           name: 'Melancholic Melodies',
           description: 'Songs for when you need to feel',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Sad',
         },
         {
           id: '6',
           name: 'Emotional Ballads',
           description: 'Heartfelt songs for reflection',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Sad',
         },
         {
           id: '7',
           name: 'Rainy Day Blues',
           description: 'Perfect for contemplative moments',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Sad',
         },
         {
           id: '8',
           name: 'Healing Hearts',
           description: 'Music to mend and comfort',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Sad',
         },
       ],
@@ -116,28 +125,32 @@ export default function MusicScreen() {
           id: '9',
           name: 'Peaceful Piano',
           description: 'Gentle melodies for relaxation',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Calm',
         },
         {
           id: '10',
           name: 'Ambient Chill',
           description: 'Atmospheric sounds for focus',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Calm',
         },
         {
           id: '11',
           name: 'Nature Sounds',
           description: 'Connect with tranquility',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Calm',
         },
         {
           id: '12',
           name: 'Meditation Music',
           description: 'Mindful listening experience',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Calm',
         },
       ],
@@ -146,28 +159,32 @@ export default function MusicScreen() {
           id: '13',
           name: 'Rock Anthems',
           description: 'Channel your energy',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Angry',
         },
         {
           id: '14',
           name: 'Heavy Metal',
           description: 'Intense and powerful',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Angry',
         },
         {
           id: '15',
           name: 'Punk Rock',
           description: 'Raw and energetic',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Angry',
         },
         {
           id: '16',
           name: 'Power Songs',
           description: 'Empowering anthems',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Angry',
         },
       ],
@@ -176,28 +193,32 @@ export default function MusicScreen() {
           id: '17',
           name: 'Calming Instrumentals',
           description: 'Soothing sounds to ease anxiety',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Anxious',
         },
         {
           id: '18',
           name: 'Gentle Acoustic',
           description: 'Soft melodies for peace',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Anxious',
         },
         {
           id: '19',
           name: 'Mindfulness',
           description: 'Music for present moment awareness',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Anxious',
         },
         {
           id: '20',
           name: 'Breathing Space',
           description: 'Create room to breathe',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Anxious',
         },
       ],
@@ -206,28 +227,32 @@ export default function MusicScreen() {
           id: '21',
           name: 'Discovery Mix',
           description: 'New sounds to explore',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Surprised',
         },
         {
           id: '22',
           name: 'Energetic Pop',
           description: 'Uplifting and exciting',
-          image: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Surprised',
         },
         {
           id: '23',
           name: 'Feel Good Mix',
           description: 'Surprising favorites',
-          image: 'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Surprised',
         },
         {
           id: '24',
           name: 'Adventure Soundtrack',
           description: 'Music for new experiences',
-          image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
+          image:
+            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
           mood: 'Surprised',
         },
       ],
@@ -264,11 +289,11 @@ export default function MusicScreen() {
     <TouchableOpacity
       key={playlist.id}
       style={[
-        styles.playlistCard, 
-        { 
+        styles.playlistCard,
+        {
           width: cardWidth,
           marginRight: index % 2 === 0 ? CARD_SPACING : 0, // Add spacing only for left cards
-        }
+        },
       ]}
       onPress={() => handlePlaylistPress(playlist)}
       activeOpacity={0.8}
@@ -300,7 +325,12 @@ export default function MusicScreen() {
           <View style={styles.moodIndicator}>
             <Text style={styles.moodText}>
               Based on your{' '}
-              <Text style={[styles.moodHighlight, { color: getMoodColor(currentMood) }]}>
+              <Text
+                style={[
+                  styles.moodHighlight,
+                  { color: getMoodColor(currentMood) },
+                ]}
+              >
                 {currentMood.toLowerCase()}
               </Text>{' '}
               mood
@@ -315,7 +345,9 @@ export default function MusicScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.playlistsGrid}>
-            {playlists.map((playlist, index) => renderPlaylistCard(playlist, index))}
+            {playlists.map((playlist, index) =>
+              renderPlaylistCard(playlist, index)
+            )}
           </View>
         </ScrollView>
       </View>
