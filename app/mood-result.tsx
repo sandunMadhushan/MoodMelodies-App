@@ -8,11 +8,31 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
+const getMoodDescription = (mood: string) => {
+  switch (mood) {
+    case 'Happy':
+      return "You're awesome! You feel great today,\nlet's keep up the good vibe";
+    case 'Sad':
+      return "It's okay to feel down sometimes.\nLet's find some uplifting music";
+    case 'Energetic':
+      return "You're full of energy today!\nLet's find some exciting tunes";
+    case 'Calm':
+      return "You seem peaceful and relaxed.\nLet's find some soothing melodies";
+    case 'Excited':
+      return "You're in high spirits!\nTime for some upbeat music";
+    default:
+      return "Let's find some music that matches your mood";
+  }
+};
+
 export default function MoodResultScreen() {
+  const params = useLocalSearchParams();
+  const mood = (Array.isArray(params.mood) ? params.mood[0] : params.mood) || 'Happy';
+  
   const handleSearch = () => {
     // Navigate to music tab or search functionality
     router.replace('/(tabs)/music');
@@ -45,9 +65,9 @@ export default function MoodResultScreen() {
           </View>
 
           {/* Mood Result */}
-          <Text style={styles.moodTitle}>Happy!</Text>
+          <Text style={styles.moodTitle}>{mood}!</Text>
           <Text style={styles.moodDescription}>
-            You're awesome! You feel great today,{'\n'}let's keep up the good vibe
+            {getMoodDescription(mood)}
           </Text>
 
           {/* Search Button */}
