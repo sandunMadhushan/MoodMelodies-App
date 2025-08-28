@@ -20,44 +20,45 @@ export default function HomeScreen() {
   };
 
   const getUserFirstName = () => {
-    return user?.full_name?.split(' ')[0] || 'User';
+    return user?.firstName || user?.full_name?.split(' ')[0] || 'User';
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#F8E6F1', '#E6B3D6', '#7B0057']}
-        locations={[0, 0.3, 1]}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/Logo Trans.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Main Content */}
-          <View style={styles.mainContent}>
-            <Text style={styles.greeting}>Hi {getUserFirstName()} ,</Text>
-            <Text style={styles.tagline}>
-              Discover your mood and find your{'\n'}perfect playlist
-            </Text>
-
-            {/* Capture Button */}
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={handleCapture}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.captureButtonText}>Capture</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.content}>
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <Image
+            source={require('@/assets/images/Logo Trans.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
-      </LinearGradient>
+
+        {/* Main Content Card */}
+        <View style={styles.cardContainer}>
+          <LinearGradient
+            colors={['#7B0057', '#9B1B6B']}
+            locations={[0, 1]}
+            style={styles.card}
+          >
+            <View style={styles.cardContent}>
+              <Text style={styles.greeting}>Hi {getUserFirstName()},</Text>
+              <Text style={styles.tagline}>
+                Discover your mood and find your{'\n'}perfect playlist
+              </Text>
+
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={handleCapture}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.captureButtonText}>Capture</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -67,50 +68,63 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8E6F1',
   },
-  gradient: {
-    flex: 1,
-  },
   content: {
     flex: 1,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
   },
-  logoContainer: {
+  logoSection: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: 100,
   },
   logo: {
     width: 280,
     height: 40,
   },
-  mainContent: {
+  cardContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: 120, // Space for tab bar
+  },
+  card: {
+    borderRadius: 30,
+    paddingHorizontal: 40,
+    paddingVertical: 50,
     alignItems: 'center',
-    paddingBottom: 100,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  cardContent: {
+    alignItems: 'center',
   },
   greeting: {
-    fontSize: 48,
+    fontSize: 42,
     fontFamily: 'Poppins-SemiBold',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
     fontWeight: '600',
   },
   tagline: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Poppins-Regular',
-    color: '#FFFFFF',
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    lineHeight: 26,
-    marginBottom: 60,
-    opacity: 0.9,
+    lineHeight: 24,
+    marginBottom: 40,
   },
   captureButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 50,
-    paddingVertical: 18,
-    paddingHorizontal: 60,
+    paddingVertical: 16,
+    paddingHorizontal: 50,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
