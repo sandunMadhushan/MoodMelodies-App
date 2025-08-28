@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { faceApiService, MoodResult } from '../lib/faceApiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AnalyzingScreen() {
   const { photoUri } = useLocalSearchParams<{ photoUri: string }>();
@@ -36,6 +37,9 @@ export default function AnalyzingScreen() {
       setMoodResult(result);
       setIsAnalyzing(false);
 
+      // Save the mood for the music screen
+      await AsyncStorage.setItem('lastAnalyzedMood', result.mood);
+
       console.log('Mood analysis complete:', result);
     } catch (err) {
       console.error('Mood analysis error:', err);
@@ -52,7 +56,7 @@ export default function AnalyzingScreen() {
 
   const handleContinue = () => {
     if (moodResult) {
-      // Navigate to music tab directly since mood-result route might not be properly configured yet
+      // Navigate to music tab with the analyzed mood
       router.push('/(tabs)/music');
     }
   };
