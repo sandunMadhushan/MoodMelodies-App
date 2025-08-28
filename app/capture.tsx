@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 
 export default function CaptureScreen() {
   const [facing, setFacing] = useState<CameraType>('front');
@@ -50,10 +51,13 @@ export default function CaptureScreen() {
   const handleCapture = async () => {
     if (cameraRef.current) {
       try {
-        const photo = await cameraRef.current.takePictureAsync();
+        const photo = await cameraRef.current.takePictureAsync({ base64: true });
         console.log('Photo captured:', photo);
-        // TODO: Process the photo for mood detection
-        Alert.alert('Success', 'Photo captured successfully!');
+        // Navigate to analyzing screen with photo data
+        router.push({
+          pathname: '/analyzing',
+          params: { photoUri: photo.uri }
+        });
       } catch (error) {
         console.error('Error capturing photo:', error);
         Alert.alert('Error', 'Failed to capture photo');
