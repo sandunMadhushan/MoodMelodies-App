@@ -14,7 +14,9 @@ import { faceApiService } from '../../lib/faceApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
-const cardWidth = (width - 60) / 2; // 2 cards per row with 30px padding on each side and 15px gap
+const PADDING = 20; // Reduced padding for more space
+const CARD_SPACING = 12; // Space between cards
+const cardWidth = (width - (PADDING * 2) - CARD_SPACING) / 2; // 2 cards per row
 
 interface Playlist {
   id: string;
@@ -255,14 +257,20 @@ export default function MusicScreen() {
   const renderPlaylistCard = (playlist: Playlist, index: number) => (
     <TouchableOpacity
       key={playlist.id}
-      style={[styles.playlistCard, { width: cardWidth }]}
+      style={[
+        styles.playlistCard, 
+        { 
+          width: cardWidth,
+          marginRight: index % 2 === 0 ? CARD_SPACING : 0, // Add spacing only for left cards
+        }
+      ]}
       onPress={() => handlePlaylistPress(playlist)}
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
         <Image source={{ uri: playlist.image }} style={styles.playlistImage} />
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.3)']}
+          colors={['transparent', 'rgba(0,0,0,0.4)']}
           style={styles.imageOverlay}
         />
       </View>
@@ -319,8 +327,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    paddingHorizontal: 30,
-    marginBottom: 30,
+    paddingHorizontal: PADDING,
+    marginBottom: 25,
   },
   title: {
     fontSize: 32,
@@ -346,27 +354,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   playlistsContainer: {
-    paddingHorizontal: 30,
+    paddingHorizontal: PADDING,
     paddingBottom: 120, // Space for tab bar
   },
   playlistsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 15,
+    justifyContent: 'flex-start', // Changed from space-between
   },
   playlistCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 16, // Reduced margin
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2, // Reduced shadow
     },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 8,
+    elevation: 6,
   },
   imageContainer: {
     position: 'relative',
@@ -376,7 +383,7 @@ const styles = StyleSheet.create({
   },
   playlistImage: {
     width: '100%',
-    height: 120,
+    height: 140, // Increased height for better proportions
     resizeMode: 'cover',
   },
   imageOverlay: {
@@ -387,19 +394,19 @@ const styles = StyleSheet.create({
     height: 40,
   },
   playlistInfo: {
-    padding: 16,
+    padding: 14, // Reduced padding
   },
   playlistName: {
-    fontSize: 18,
+    fontSize: 16, // Reduced font size
     fontFamily: 'Poppins-SemiBold',
     color: '#2D2D2D',
-    marginBottom: 6,
+    marginBottom: 4, // Reduced margin
     fontWeight: '600',
   },
   playlistDescription: {
-    fontSize: 13,
+    fontSize: 12, // Reduced font size
     fontFamily: 'Poppins-Regular',
     color: '#888888',
-    lineHeight: 18,
+    lineHeight: 16, // Reduced line height
   },
 });
