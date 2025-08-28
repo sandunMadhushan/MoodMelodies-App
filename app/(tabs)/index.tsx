@@ -15,8 +15,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
 
   const handleCapture = () => {
-    // TODO: Navigate to camera/mood capture screen
-    console.log('Capture pressed');
+    router.push('/capture');
   };
 
   const getUserFirstName = () => {
