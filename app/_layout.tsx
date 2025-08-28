@@ -44,6 +44,7 @@ export default function RootLayout() {
           <Stack.Screen name="capture" options={{ headerShown: false }} />
           <Stack.Screen name="analyzing" options={{ headerShown: false }} />
           <Stack.Screen name="mood-result" options={{ headerShown: false }} />
+          <Stack.Screen name="player" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />

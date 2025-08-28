@@ -238,7 +238,13 @@ export default function MusicScreen() {
 
   const handlePlaylistPress = (playlist: Playlist) => {
     console.log('Selected playlist:', playlist.name);
-    // TODO: Navigate to playlist details or start playing
+    router.push({
+      pathname: '/player' as any,
+      params: {
+        playlistName: playlist.name,
+        mood: currentMood,
+      },
+    });
   };
 
   const getMoodColor = (mood: string): string => {
