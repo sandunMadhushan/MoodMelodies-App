@@ -326,7 +326,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Get Help
 
-- **📧 Email**: sandunhmadhushan@gmail.com
+<!-- - **📧 Email**: sandunhmadhushan@gmail.com -->
+
 - **🐛 Issues**: [GitHub Issues](https://github.com/sandunMadhushan/mood-melodies-app/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/sandunMadhushan/mood-melodies-app/discussions)
 
