@@ -8,23 +8,42 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
 export default function AnalyzingScreen() {
   const [progress, setProgress] = useState(0);
+  const { photoUri } = useLocalSearchParams();
 
   useEffect(() => {
-    // Simulate analysis progress
+    const analyzeMood = async () => {
+      try {
+        // Here you would integrate with an emotion detection API
+        // For example, using Microsoft Azure Face API or Google Cloud Vision API
+        
+        // For now, let's simulate a random mood detection
+        const moods = ['Happy', 'Sad', 'Energetic', 'Calm', 'Excited'];
+        const detectedMood = moods[Math.floor(Math.random() * moods.length)];
+        
+        // Navigate to result screen with the detected mood
+        setTimeout(() => {
+          router.replace({
+            pathname: '/mood-result',
+            params: { mood: detectedMood }
+          });
+        }, 2000);
+      } catch (error) {
+        console.error('Error analyzing mood:', error);
+        // Handle error appropriately
+      }
+    };
+
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          // Navigate to mood result after analysis is complete
-          setTimeout(() => {
-            router.replace('/mood-result');
-          }, 500);
+          analyzeMood();
           return 100;
         }
         return prev + 2;
