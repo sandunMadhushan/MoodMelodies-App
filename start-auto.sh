@@ -3,8 +3,22 @@
 # 🚀 Automated Startup Script for Mood Melodies App
 # Works on any laptop - automatically discovers network configuration
 
-echo "🎵 Starting Mood Melodies App with Auto-Discovery..."
-echo "🌐 This script works on ANY laptop without manual IP configuration!"
+echo "🎵 Mood Melodies - Quick Start Helper"
+echo "======================================"
+echo ""
+echo -e "\033[1;33m📋 For better log visibility, use separate terminals:\033[0m"
+echo ""
+echo -e "\033[0;32mTerminal 1 (Face API Server):\033[0m"
+echo "  Linux/Mac/Git Bash: ./start-face-api.sh"
+echo "  Windows CMD:         start-face-api.bat"
+echo ""
+echo -e "\033[0;32mTerminal 2 (Expo Development):\033[0m"
+echo "  Linux/Mac/Git Bash: ./start-expo.sh"
+echo "  Windows CMD:         start-expo.bat"
+echo ""
+echo -e "\033[0;34m💡 The separate terminals will show logs independently!\033[0m"
+echo ""
+echo "Alternatively, continue below to start everything in one terminal:"
 echo ""
 
 # Colors for output

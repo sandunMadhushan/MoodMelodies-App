@@ -6,7 +6,43 @@ A React Native mobile application that captures your photo, analyzes your mood u
 
 ![Mood Melodies App](./assets/images/Logo%20Trans.png)
 
-## 📱 Features
+## � Quick Start (Recommended - Separate Terminals)
+
+For the best developer experience with clear log visibility:
+
+### Terminal 1 - Face API Server:
+
+```bash
+# Windows Command Prompt:
+start-face-api.bat
+
+# Git Bash/Mac/Linux:
+./start-face-api.sh
+```
+
+### Terminal 2 - Expo Development:
+
+```bash
+# Windows Command Prompt:
+start-expo.bat
+
+# Git Bash/Mac/Linux:
+./start-expo.sh
+```
+
+**Benefits**: Independent logs, easy debugging, separate service control
+
+### Alternative - Single Terminal:
+
+```bash
+# All-in-one startup (Windows):
+start-auto.bat
+
+# All-in-one startup (Git Bash/Mac/Linux):
+./start-auto.sh
+```
+
+## �📱 Features
 
 ### 🎯 Core Functionality
 

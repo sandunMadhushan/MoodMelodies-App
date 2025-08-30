@@ -14,9 +14,35 @@
    - **Android**: [Play Store - Expo Go](https://play.google.com/store/apps/details?id=host.exp.exponent)
    - **iOS**: [App Store - Expo Go](https://apps.apple.com/app/expo-go/id982107779)
 
-## 🚀 Automatic Setup & Run
+## 🚀 Recommended Setup (Separate Terminals for Clear Logs)
 
-### Windows Command Prompt (CMD) or PowerShell:
+### Option 1: Two Terminals (Best Developer Experience)
+
+**Terminal 1 - Face API Server:**
+
+```bash
+# Windows Command Prompt:
+start-face-api.bat
+
+# Git Bash/Mac/Linux:
+./start-face-api.sh
+```
+
+**Terminal 2 - Expo Development:**
+
+```bash
+# Windows Command Prompt:
+start-expo.bat
+
+# Git Bash/Mac/Linux:
+./start-expo.sh
+```
+
+💡 **Benefits**: Clear log separation, easy debugging, independent service control
+
+### Option 2: Single Terminal (Quick Start)
+
+**Windows Command Prompt (CMD) or PowerShell:**
 
 ```cmd
 # 1. Download/clone the project
@@ -25,7 +51,7 @@
 start-auto.bat
 ```
 
-### Git Bash (Windows) / Mac / Linux:
+**Git Bash (Windows) / Mac / Linux:**
 
 ```bash
 # 1. Download/clone the project
@@ -34,6 +60,35 @@ start-auto.bat
 chmod +x start-auto.sh
 ./start-auto.sh
 ```
+
+## 📱 Using the App
+
+1. **Start the services** using one of the methods above
+2. **Scan QR code** with Expo Go app on your phone
+3. **Take a photo** to analyze your mood
+4. **Listen to music** based on your detected mood!
+
+## 🔧 What Each Script Does
+
+### Face API Scripts (`start-face-api.*`)
+
+- Starts the mood analysis server on port 3001
+- Shows Face API server logs clearly
+- Handles port conflicts automatically
+- Displays server status and health checks
+
+### Expo Scripts (`start-expo.*`)
+
+- Starts the mobile app development server
+- Shows Expo logs and QR code for phone connection
+- Tests network connectivity
+- Works with automatic IP discovery
+
+### Combined Scripts (`start-auto.*`)
+
+- Runs both services in a single terminal
+- Good for quick testing
+- All logs mixed together (harder to debug)
 
 ### ⚠️ Important for Git Bash Users:
 

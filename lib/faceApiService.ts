@@ -41,6 +41,15 @@ class FaceApiService {
         return await this.analyzeWithAPI(imageUri);
       } catch (apiError) {
         console.warn('API analysis failed, using mock:', apiError);
+        console.warn(`💡 Troubleshooting tips:`);
+        console.warn(
+          `   • Make sure phone and computer are on the same WiFi network`
+        );
+        console.warn(
+          `   • Check if Face API server is running on your computer`
+        );
+        console.warn(`   • Try restarting the Face API server`);
+        console.warn(`   • If using mobile hotspot, try regular WiFi instead`);
         return await this.analyzeMoodMock(imageUri);
       }
     } catch (error) {
@@ -58,7 +67,10 @@ class FaceApiService {
     // Use dynamic endpoint discovery - no manual IP configuration needed!
     const primaryUrl = await this.getApiBaseUrl();
 
-    console.log(`🔄 Using auto-discovered endpoint: ${primaryUrl}`);
+    console.log(`🌐 Auto-discovered Face API endpoint: ${primaryUrl}`);
+    console.log(
+      `📱 Attempting to connect from mobile app to Face API server...`
+    );
 
     try {
       // Call face API service with timeout
@@ -86,16 +98,15 @@ class FaceApiService {
       console.log(`✅ REAL FACE API SUCCESS via ${primaryUrl}:`, result);
       return result;
     } catch (error) {
-      console.warn(
-        `❌ Auto-discovered endpoint failed, clearing cache:`,
-        error
-      );
+      console.warn(`❌ Auto-discovered endpoint failed: ${primaryUrl}`);
+      console.warn(`❌ Error details:`, error);
+      console.warn(`🔄 Clearing cache and will rediscover next time`);
 
       // Clear cache and force rediscovery for next time
       networkDiscovery.clearCache();
 
       // Throw error to trigger fallback to mock
-      throw new Error('Could not connect to Face API service');
+      throw new Error(`Could not connect to Face API service at ${primaryUrl}`);
     }
   }
 

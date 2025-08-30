@@ -4,8 +4,23 @@ setlocal enabledelayedexpansion
 REM 🚀 Automated Startup Script for Mood Melodies App (Windows)
 REM Works on any laptop - automatically discovers network configuration
 
-echo 🎵 Starting Mood Melodies App with Auto-Discovery...
-echo 🌐 This script works on ANY laptop without manual IP configuration!
+echo.
+echo 🎵 Mood Melodies - Quick Start Helper
+echo ======================================
+echo.
+echo 📋 For better log visibility, use separate terminals:
+echo.
+echo Terminal 1 ^(Face API Server^):
+echo   Windows CMD:         start-face-api.bat
+echo   Git Bash:            ./start-face-api.sh
+echo.
+echo Terminal 2 ^(Expo Development^):
+echo   Windows CMD:         start-expo.bat
+echo   Git Bash:            ./start-expo.sh
+echo.
+echo 💡 The separate terminals will show logs independently!
+echo.
+echo Alternatively, continue below to start everything in one terminal:
 echo.
 
 REM Check if Node.js is installed

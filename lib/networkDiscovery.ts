@@ -112,9 +112,13 @@ class NetworkDiscoveryService {
     // 2. Android emulator specific
     urls.push(`http://10.0.2.2:${port}`);
 
-    // 3. Common network ranges (most likely to work)
-    const commonIPs = this.generateCommonNetworkRanges();
-    urls.push(...commonIPs.map((ip) => `http://${ip}:${port}`));
+    // 3. PRIORITIZE WiFi networks (192.168.x.x) - Most likely to work from phone
+    const wifiIPs = this.generateWiFiNetworkRanges();
+    urls.push(...wifiIPs.map((ip) => `http://${ip}:${port}`));
+
+    // 4. Other network ranges (lower priority - often virtual interfaces)
+    const otherIPs = this.generateOtherNetworkRanges();
+    urls.push(...otherIPs.map((ip) => `http://${ip}:${port}`));
 
     // Remove duplicates and return
     return [...new Set(urls)];
@@ -180,6 +184,58 @@ class NetworkDiscoveryService {
     }
 
     return ips;
+  }
+
+  /**
+   * Generate WiFi network IP ranges (most likely to work from phone)
+   */
+  private generateWiFiNetworkRanges(): string[] {
+    const wifiIPs: string[] = [];
+
+    // Standard home WiFi ranges
+    const wifiRanges = [
+      '192.168.1', // Most common home router range
+      '192.168.0', // Common home router range
+      '192.168.4', // Some routers
+      '192.168.2', // Some routers
+      '192.168.16', // Detected in your network
+    ];
+
+    wifiRanges.forEach((range) => {
+      [1, 2, 10, 100, 101, 254].forEach((last) => {
+        wifiIPs.push(`${range}.${last}`);
+      });
+    });
+
+    return wifiIPs;
+  }
+
+  /**
+   * Generate other network ranges (virtual interfaces, etc.)
+   */
+  private generateOtherNetworkRanges(): string[] {
+    const otherIPs: string[] = [];
+
+    // Virtual network ranges (often Docker, VMware, etc.)
+    const ranges = [
+      '192.168.56', // VirtualBox host-only
+      '172.16.0', // Docker
+      '172.31.98', // Detected
+      '172.29.112', // Detected
+      '172.30.224', // Detected
+      '172.17.208', // Detected
+      '172.20.96', // Detected
+      '10.0.0', // Private network
+      '10.0.1', // Private network
+    ];
+
+    ranges.forEach((range) => {
+      [1, 2, 10, 100, 101, 254].forEach((last) => {
+        otherIPs.push(`${range}.${last}`);
+      });
+    });
+
+    return otherIPs;
   }
 
   /**
