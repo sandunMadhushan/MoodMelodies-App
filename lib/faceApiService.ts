@@ -1,3 +1,5 @@
+import { networkDiscovery } from './networkDiscovery';
+
 export interface MoodResult {
   mood: string;
   confidence: number;
@@ -13,24 +15,22 @@ export interface MoodResult {
 }
 
 class FaceApiService {
-  // Configuration for your face API service
-  private getApiBaseUrl(): string {
+  /**
+   * Dynamic endpoint discovery - works on any laptop automatically!
+   */
+  private async getApiBaseUrl(): Promise<string> {
     if (!__DEV__) {
       return 'https://your-face-api-service.herokuapp.com'; // Production
     }
 
-    // Development - Try multiple endpoints for better connectivity
-    // The service will automatically try these in order and use the first one that works
-    return 'http://172.19.144.1:3001'; // Your computer's IP address
+    // Development - Auto-discover working endpoint
+    try {
+      return await networkDiscovery.getWorkingEndpoint();
+    } catch (error) {
+      console.warn('Failed to auto-discover endpoint, using localhost:', error);
+      return 'http://localhost:3001'; // Final fallback
+    }
   }
-
-  private readonly FALLBACK_URLS = __DEV__
-    ? [
-        'http://localhost:3001', // For web/simulator testing
-        'http://127.0.0.1:3001', // Alternative localhost
-        'http://10.0.2.2:3001', // Android emulator host
-      ]
-    : [];
 
   async analyzeMood(imageUri: string): Promise<MoodResult> {
     try {
@@ -55,48 +55,48 @@ class FaceApiService {
     const blob = await response.blob();
     const base64 = await this.blobToBase64(blob);
 
-    // Try primary URL first, then fallbacks
-    const urlsToTry = [this.getApiBaseUrl(), ...this.FALLBACK_URLS];
+    // Use dynamic endpoint discovery - no manual IP configuration needed!
+    const primaryUrl = await this.getApiBaseUrl();
 
-    for (const baseUrl of urlsToTry) {
-      try {
-        console.log(`🔄 Trying API endpoint: ${baseUrl}`);
+    console.log(`🔄 Using auto-discovered endpoint: ${primaryUrl}`);
 
-        // Call face API service with timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    try {
+      // Call face API service with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const apiResponse = await fetch(`${baseUrl}/analyze-mood-base64`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageData: base64,
-          }),
-          signal: controller.signal,
-        });
+      const apiResponse = await fetch(`${primaryUrl}/analyze-mood-base64`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageData: base64,
+        }),
+        signal: controller.signal,
+      });
 
-        clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-        if (!apiResponse.ok) {
-          throw new Error(`API request failed: ${apiResponse.status}`);
-        }
-
-        const result = await apiResponse.json();
-        console.log(
-          `✅ Real face API analysis complete via ${baseUrl}:`,
-          result
-        );
-        return result;
-      } catch (error) {
-        console.warn(`❌ Failed to connect to ${baseUrl}:`, error);
-        // Continue to next URL
+      if (!apiResponse.ok) {
+        throw new Error(`API request failed: ${apiResponse.status}`);
       }
-    }
 
-    // If all URLs fail, throw error
-    throw new Error('Could not connect to Face API service');
+      const result = await apiResponse.json();
+      console.log(`✅ REAL FACE API SUCCESS via ${primaryUrl}:`, result);
+      return result;
+    } catch (error) {
+      console.warn(
+        `❌ Auto-discovered endpoint failed, clearing cache:`,
+        error
+      );
+
+      // Clear cache and force rediscovery for next time
+      networkDiscovery.clearCache();
+
+      // Throw error to trigger fallback to mock
+      throw new Error('Could not connect to Face API service');
+    }
   }
 
   private async analyzeMoodMock(imageUri: string): Promise<MoodResult> {
@@ -239,63 +239,6 @@ class FaceApiService {
       mood: moodMapping[maxEmotion] || 'Neutral',
       confidence: maxValue,
     };
-  }
-
-  // Helper method to get mood-based music recommendations
-  getMoodBasedPlaylist(mood: string): string[] {
-    const playlists: { [key: string]: string[] } = {
-      Happy: [
-        'Upbeat Pop Hits',
-        'Feel Good Classics',
-        'Dance Party',
-        'Summer Vibes',
-        'Positive Energy',
-      ],
-      Sad: [
-        'Melancholic Melodies',
-        'Emotional Ballads',
-        'Rainy Day Blues',
-        'Heartbreak Healing',
-        'Introspective Indie',
-      ],
-      Angry: [
-        'Rock Anthems',
-        'Heavy Metal',
-        'Punk Rock',
-        'Aggressive Hip-Hop',
-        'Power Songs',
-      ],
-      Calm: [
-        'Ambient Chill',
-        'Peaceful Piano',
-        'Nature Sounds',
-        'Meditation Music',
-        'Lo-Fi Beats',
-      ],
-      Anxious: [
-        'Calming Instrumentals',
-        'Soothing Sounds',
-        'Relaxation Music',
-        'Mindfulness',
-        'Gentle Acoustic',
-      ],
-      Surprised: [
-        'Energetic Pop',
-        'Uplifting Beats',
-        'Feel Good Mix',
-        'Motivational Music',
-        'Discovery Playlist',
-      ],
-      Disgusted: [
-        'Cleansing Beats',
-        'Fresh Start',
-        'Renewal Playlist',
-        'Positive Vibes',
-        'Mood Lifter',
-      ],
-    };
-
-    return playlists[mood] || playlists['Calm'];
   }
 }
 
