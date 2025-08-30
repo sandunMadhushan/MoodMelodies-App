@@ -6,43 +6,7 @@ A React Native mobile application that captures your photo, analyzes your mood u
 
 ![Mood Melodies App](./assets/images/Logo%20Trans.png)
 
-## � Quick Start (Recommended - Separate Terminals)
-
-For the best developer experience with clear log visibility:
-
-### Terminal 1 - Face API Server:
-
-```bash
-# Windows Command Prompt:
-start-face-api.bat
-
-# Git Bash/Mac/Linux:
-./start-face-api.sh
-```
-
-### Terminal 2 - Expo Development:
-
-```bash
-# Windows Command Prompt:
-start-expo.bat
-
-# Git Bash/Mac/Linux:
-./start-expo.sh
-```
-
-**Benefits**: Independent logs, easy debugging, separate service control
-
-### Alternative - Single Terminal:
-
-```bash
-# All-in-one startup (Windows):
-start-auto.bat
-
-# All-in-one startup (Git Bash/Mac/Linux):
-./start-auto.sh
-```
-
-## �📱 Features
+## 📱 Features
 
 ### 🎯 Core Functionality
 
@@ -85,7 +49,7 @@ start-auto.bat
 - **face-api.js** for facial emotion recognition
 - **Node.js/Express** API server for mood analysis
 - **Supabase** for authentication and data storage
-- **Spotify Web API** for music data
+- **ngrok** for tunnel access to local API
 
 ### 🎵 Audio Integration
 
@@ -108,6 +72,9 @@ start-auto.bat
 git clone https://github.com/sandunMadhushan/mood-melodies-app.git
 cd mood-melodies-app
 npm install
+cd face-api-service
+npm install
+cd ..
 ```
 
 ### 2. Environment Setup
@@ -123,36 +90,59 @@ const supabaseUrl = 'YOUR_SUPABASE_URL';
 const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
 ```
 
+#### ngrok Setup (for real mood analysis)
+
+1. Create account at [ngrok.com](https://ngrok.com)
+2. Get your authtoken from dashboard
+3. Configure ngrok:
+
+```bash
+./tools/ngrok/ngrok.exe authtoken YOUR_AUTHTOKEN
+```
+
 #### Spotify API Setup (Optional)
 
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Create new app
-3. Update `lib/musicService.ts`:
+3. Update music service configuration
 
-```typescript
-const clientId = 'YOUR_SPOTIFY_CLIENT_ID';
-const clientSecret = 'YOUR_SPOTIFY_CLIENT_SECRET';
-```
+For detailed Spotify setup, see: [docs/markdown/SPOTIFY-SETUP.md](./docs/markdown/SPOTIFY-SETUP.md)
 
-For detailed Spotify setup, see: [SPOTIFY-SETUP.md](./SPOTIFY-SETUP.md)
+### 3. One-Command Startup 🚀
 
-### 3. Start Development Server
+**This is the easiest way to start everything:**
 
 ```bash
-# Start Expo development server
-npx expo start
+# Windows
+./start-all.bat
 
-# For tunnel (remote testing)
-npx expo start --tunnel
+# Linux/Mac
+./start-all.sh
 ```
 
-### 4. Start Face API Service (for real mood analysis)
+This automatically starts:
+
+1. 🤖 Face API Service (localhost:3001)
+2. 🌐 ngrok tunnel (public access)
+3. 📱 Expo development server (tunnel mode)
+4. 🔄 Auto-updates app with ngrok URL
+
+### 4. Manual Startup (Alternative)
+
+If you prefer to start services individually:
 
 ```bash
-# In a separate terminal
-cd face-api-service
-npm install
-npm start
+# Terminal 1: Start Face API Service
+node face-api-service/server-simple.js
+
+# Terminal 2: Start ngrok tunnel
+./tools/ngrok/ngrok.exe http 3001
+
+# Terminal 3: Update app with ngrok URL
+node tools/ngrok/update-ngrok-url.js
+
+# Terminal 4: Start Expo
+npx expo start --tunnel --clear
 ```
 
 ## 📱 Installation & Usage
@@ -160,8 +150,10 @@ npm start
 ### Development Testing
 
 1. **Install Expo Go** on your mobile device
-2. **Scan QR code** from terminal or use tunnel URL
-3. **Allow camera permissions** when prompted
+2. **Run startup script**: `./start-all.bat` or `./start-all.sh`
+3. **Scan QR code** from Expo terminal
+4. **Allow camera permissions** when prompted
+5. **Test mood analysis** by taking a selfie
 
 ### Production Build
 
@@ -184,12 +176,12 @@ npx expo build:ios
 ### 2. Mood Capture
 
 - **📸 Take Photo**: Capture using device camera
-- **🤖 AI Analysis**: Real-time mood detection
+- **🤖 AI Analysis**: Real-time mood detection via ngrok tunnel
 - **📊 Results**: View detected emotion with confidence score
 
 ### 3. Music Discovery
 
-- **🎵 Smart Playlists**: Auto-generated based on mood
+- **🎵 Smart Playlists**: Auto-generated based on detected mood
 - **🎯 Spotify Integration**: Real tracks with metadata
 - **🔄 Fallback System**: Guaranteed music playback
 
@@ -205,30 +197,50 @@ npx expo build:ios
 
 ```
 mood-melodies-app/
-├── app/                    # App screens (Expo Router)
-│   ├── (auth)/            # Authentication screens
-│   ├── (tabs)/            # Main app tabs
-│   ├── capture.tsx        # Photo capture screen
-│   ├── analyzing.tsx      # Mood analysis screen
-│   └── player.tsx         # Music player screen
-├── lib/                   # Core services
-│   ├── supabase.ts        # Database client
-│   ├── musicService.ts    # Music API integration
-│   └── faceApiService.ts  # Mood analysis client
-├── components/            # Reusable UI components
-├── context/              # React context providers
-├── face-api-service/     # Node.js API server
-└── assets/               # Images and static files
+├── 🚀 start-all.sh             # One-command startup (Linux/Mac)
+├── 🚀 start-all.bat            # One-command startup (Windows)
+├── 📖 README.md                # This file
+├── 📱 app/                     # App screens (Expo Router)
+│   ├── (auth)/                # Authentication screens
+│   │   ├── login.tsx          # Login screen
+│   │   └── signup.tsx         # Signup screen
+│   ├── (tabs)/                # Main app tabs
+│   │   ├── index.tsx          # Home/Dashboard
+│   │   ├── capture.tsx        # Photo capture
+│   │   ├── music.tsx          # Music player
+│   │   ├── favorites.tsx      # Saved favorites
+│   │   └── profile.tsx        # User profile
+│   ├── analyzing.tsx          # Mood analysis screen
+│   ├── mood-result.tsx        # Analysis results
+│   └── player.tsx             # Music player screen
+├── 📡 lib/                     # Core services
+│   ├── supabase.ts            # Database client
+│   ├── musicService.ts        # Music API integration
+│   ├── faceApiService.ts      # Mood analysis client
+│   └── dynamicNetworkDiscovery.ts # Network discovery
+├── 🧩 components/              # Reusable UI components
+├── 🔧 context/                 # React context providers
+│   └── AuthContext.tsx        # Authentication context
+├── 🤖 face-api-service/        # Node.js API server
+│   ├── server-simple.js       # Express server
+│   ├── get-ngrok-url.js       # ngrok URL fetcher
+│   └── package.json           # API dependencies
+├── 📚 docs/                    # Documentation
+│   ├── DEV-GUIDE.md           # Development guide
+│   └── markdown/              # All documentation files
+├── 📋 scripts/                 # Development utilities
+│   ├── startup/               # Legacy startup scripts
+│   ├── cleanup-port.sh        # Port management
+│   ├── find-ip.js            # Network discovery
+│   └── test-network.js       # Network testing
+├── 🛠️ tools/                   # Development tools
+│   └── ngrok/                 # ngrok tunnel tools
+│       ├── ngrok.exe          # ngrok executable
+│       └── update-ngrok-url.js # Auto URL updater
+└── 🎨 assets/                  # Images and static files
 ```
 
 ### Key Services
-
-#### MusicService (`lib/musicService.ts`)
-
-- **Spotify API integration** with access token management
-- **Smart fallback system** for guaranteed playback
-- **Cross-platform audio** playback via Expo AV
-- **Error handling** and retry logic
 
 #### Face API Service (`face-api-service/`)
 
@@ -236,6 +248,21 @@ mood-melodies-app/
 - **face-api.js integration** for emotion detection
 - **Image processing** and confidence scoring
 - **RESTful API** endpoints
+- **Realistic mock analysis** for development
+
+#### Dynamic Network Discovery (`lib/dynamicNetworkDiscovery.ts`)
+
+- **Automatic ngrok URL detection**
+- **Fallback to localhost** for development
+- **Tunnel mode optimization**
+- **Enhanced error handling**
+
+#### Music Service (`lib/musicService.ts`)
+
+- **Spotify API integration** with access token management
+- **Smart fallback system** for guaranteed playback
+- **Cross-platform audio** playback via Expo AV
+- **Error handling** and retry logic
 
 ## 🔧 Configuration
 
@@ -251,59 +278,109 @@ The app uses a robust music system with multiple sources:
 
 - **Mood Analysis**: `http://localhost:3001/analyze-mood`
 - **Health Check**: `http://localhost:3001/health`
+- **ngrok Tunnel**: Dynamic URL via tunnel discovery
+
+### ngrok Configuration
+
+The app automatically detects and uses ngrok tunnel URLs for mobile access:
+
+- **Automatic discovery** of ngrok public URL
+- **Header injection** for ngrok compatibility
+- **Fallback handling** when tunnel is unavailable
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-#### 1. Camera Permissions
+#### 1. Face API Service Issues
+
+```bash
+# Check if service is running
+curl http://localhost:3001/health
+
+# Kill port conflicts
+npx kill-port 3001
+
+# Start service manually
+node face-api-service/server-simple.js
+```
+
+#### 2. ngrok Tunnel Issues
+
+```bash
+# Configure authtoken
+./tools/ngrok/ngrok.exe authtoken YOUR_TOKEN
+
+# Start tunnel manually
+./tools/ngrok/ngrok.exe http 3001
+
+# Update app with new URL
+node tools/ngrok/update-ngrok-url.js
+```
+
+#### 3. Camera Permissions
 
 ```bash
 # Add to app.json
 "permissions": ["CAMERA", "CAMERA_ROLL"]
 ```
 
-#### 2. Audio Playback Issues
+#### 4. Audio Playback Issues
 
 - Ensure **Expo AV** is properly installed
 - Check **audio URLs** are accessible
 - Verify **device audio settings**
 
-#### 3. Face API Service
+#### 5. Network Connectivity
 
-- Ensure **Node.js service** is running on port 3001
-- Check **network connectivity** between app and server
-- Verify **face-api.js models** are loaded
+```bash
+# Test network connectivity
+node scripts/test-network.js
 
-#### 4. Spotify Integration
-
-- Verify **Client ID and Secret** are correct
-- Check **internet connectivity**
-- Ensure **Spotify app** is not blocking API access
+# Find local IP
+node scripts/find-ip.js
+```
 
 ### Debug Mode
 
-Enable detailed logging:
+Enable detailed logging for troubleshooting:
 
 ```typescript
-// In musicService.ts
-console.log(
-  `📊 Spotify tracks: ${songs.length} total, ${tracksWithPreviews.length} with previews`
-);
+// Enhanced logging in faceApiService.ts
+console.log('🔍 Network discovery result:', result);
+console.log('📡 Using endpoint:', endpoint);
+```
+
+### Service Health Checks
+
+```bash
+# Check Face API health
+curl http://localhost:3001/health
+
+# Check ngrok tunnel (replace with your URL)
+curl -H "ngrok-skip-browser-warning: any" https://your-ngrok-url.ngrok-free.app/health
+
+# Test mood analysis
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"image":"base64_image_data"}' \
+  http://localhost:3001/analyze-mood
 ```
 
 ## 📚 Documentation
 
 ### Additional Guides
 
-- **[Spotify Setup Guide](./SPOTIFY-SETUP.md)** - Complete Spotify API integration
-- **[Music Playback Guide](./MUSIC-PLAYBACK-GUIDE.md)** - Audio system details
-- **[Testing Guide](./TESTING-GUIDE.md)** - QA and testing procedures
-- **[Startup Guide](./STARTUP-GUIDE.md)** - Detailed setup instructions
+- **[Development Guide](./docs/DEV-GUIDE.md)** - Complete development setup
+- **[Spotify Setup Guide](./docs/markdown/SPOTIFY-SETUP.md)** - Spotify API integration
+- **[Music Playback Guide](./docs/markdown/MUSIC-PLAYBACK-GUIDE.md)** - Audio system details
+- **[Testing Guide](./docs/markdown/TESTING-GUIDE.md)** - QA and testing procedures
+- **[Startup Guide](./docs/markdown/STARTUP-GUIDE.md)** - Detailed setup instructions
+- **[Tunnel Mode Guide](./docs/markdown/TUNNEL-MODE.md)** - ngrok tunnel configuration
 
 ### API Reference
 
 - **Mood Analysis**: POST `/analyze-mood` with image data
+- **Health Check**: GET `/health` for service status
 - **Music Search**: Spotify Web API integration
 - **User Auth**: Supabase authentication flow
 
@@ -329,22 +406,57 @@ Deploy the face-api-service to cloud platforms:
 - **Vercel**: `vercel deploy`
 - **Railway**: Connect GitHub repository
 
+Update the app configuration to use production API endpoint.
+
+## 🎯 Development Workflow
+
+### Starting Development
+
+1. **Quick Start**: `./start-all.bat` (Windows) or `./start-all.sh` (Linux/Mac)
+2. **Mobile Testing**: Scan QR code with Expo Go
+3. **Real Analysis**: Test mood detection with camera
+4. **Music Playback**: Verify music generation and playback
+
+### Development Tools
+
+```bash
+# Port management
+npx kill-port 3001    # Face API
+npx kill-port 8081    # Expo
+
+# Network testing
+node scripts/test-network.js
+node scripts/find-ip.js
+
+# Service testing
+curl http://localhost:3001/health
+```
+
+### Code Quality
+
+- **TypeScript** for type safety
+- **ESLint** for code quality
+- **Prettier** for formatting
+- **Expo** best practices
+
 ## 🤝 Contributing
 
 ### Development Setup
 
 1. **Fork** the repository
 2. **Create feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open Pull Request**
+3. **Follow setup instructions** above
+4. **Test changes** with `./start-all.bat`
+5. **Commit changes**: `git commit -m 'Add amazing feature'`
+6. **Push to branch**: `git push origin feature/amazing-feature`
+7. **Open Pull Request**
 
 ### Code Style
 
-- **TypeScript** for type safety
-- **ESLint** for code quality
-- **Prettier** for formatting
-- **Expo** best practices
+- Use **TypeScript** for all new code
+- Follow **Expo** and **React Native** best practices
+- Add **proper error handling** and logging
+- Include **tests** for new features
 
 ## 📄 License
 
@@ -355,6 +467,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **face-api.js** for facial emotion recognition
 - **Spotify** for music data and API
 - **Supabase** for backend services
+- **ngrok** for tunnel access
 - **Expo** for cross-platform development
 - **React Native** community for excellent tools
 
@@ -362,16 +475,36 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Get Help
 
-<!-- - **📧 Email**: sandunhmadhushan@gmail.com -->
-
 - **🐛 Issues**: [GitHub Issues](https://github.com/sandunMadhushan/mood-melodies-app/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/sandunMadhushan/mood-melodies-app/discussions)
+- **📚 Documentation**: [Development Guide](./docs/DEV-GUIDE.md)
+
+### Quick Support Commands
+
+```bash
+# Health check all services
+curl http://localhost:3001/health
+
+# Restart everything
+./start-all.bat  # or ./start-all.sh
+
+# Clear Expo cache
+npx expo start --clear
+
+# Test network connectivity
+node scripts/test-network.js
+```
 
 ### Version
 
 **Current Version**: 1.0.0  
-**Last Updated**: August 28, 2025
+**Last Updated**: August 30, 2025  
+**Node.js**: 18+  
+**Expo SDK**: 53  
+**React Native**: Latest
 
 ---
 
 _Transform your emotions into musical experiences_ 🎵✨
+
+**🚀 Ready to start? Run `./start-all.bat` and scan the QR code!**

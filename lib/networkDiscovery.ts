@@ -17,6 +17,7 @@ class NetworkDiscoveryService {
   private cachedWorkingUrl: string | null = null;
   private lastDiscoveryTime: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private ngrokTunnelUrl: string | null = null; // For ngrok tunnel support
 
   /**
    * Get the best working Face API endpoint automatically
@@ -101,22 +102,42 @@ class NetworkDiscoveryService {
 
   /**
    * Generate all possible endpoint URLs based on network discovery
+   * Now includes support for tunnel mode, ngrok URLs, and various network configurations
    */
   private async generatePossibleUrls(): Promise<string[]> {
     const urls: string[] = [];
     const port = '3001';
 
-    // 1. Standard localhost variants (highest priority)
+    // 1. NGROK TUNNEL SUPPORT - Highest priority if available
+    if (this.ngrokTunnelUrl) {
+      urls.unshift(this.ngrokTunnelUrl); // Add to beginning of array
+    }
+
+    // 2. ACTIVE NGROK TUNNEL - Your current tunnel URL
+    urls.unshift('https://297f5d18cb69.ngrok-free.app');
+
+    // 3. Check for common ngrok patterns (if tunnel URL not manually set)
+    const ngrokPatterns = [
+      'https://localhost.ngrok.io',
+      'https://127-0-0-1.ngrok.io',
+      // These would be actual ngrok URLs when tunnel is active
+      // The actual URL will be provided by ngrok when started
+    ];
+    urls.push(...ngrokPatterns); // 3. Standard localhost variants (highest priority for development)
     urls.push(`http://localhost:${port}`, `http://127.0.0.1:${port}`);
 
-    // 2. Android emulator specific
+    // 4. Android emulator specific
     urls.push(`http://10.0.2.2:${port}`);
 
-    // 3. PRIORITIZE WiFi networks (192.168.x.x) - Most likely to work from phone
+    // 5. PRIORITIZE WiFi networks (192.168.x.x) - Most likely to work from phone in LAN mode
     const wifiIPs = this.generateWiFiNetworkRanges();
     urls.push(...wifiIPs.map((ip) => `http://${ip}:${port}`));
 
-    // 4. Other network ranges (lower priority - often virtual interfaces)
+    // 6. Expo tunnel mode support - when using Expo tunnel
+    // The Face API should be accessible via ngrok tunnel URL
+    // This will be dynamically set when ngrok is running
+
+    // 7. Other network ranges (lower priority - often virtual interfaces)
     const otherIPs = this.generateOtherNetworkRanges();
     urls.push(...otherIPs.map((ip) => `http://${ip}:${port}`));
 
@@ -307,6 +328,23 @@ class NetworkDiscoveryService {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  /**
+   * Set the ngrok tunnel URL for Face API
+   * Call this when ngrok tunnel is started
+   */
+  setNgrokTunnelUrl(url: string): void {
+    this.ngrokTunnelUrl = url;
+    this.clearCache(); // Force rediscovery to use ngrok URL
+    console.log(`🌐 Ngrok tunnel URL set: ${url}`);
+  }
+
+  /**
+   * Get current ngrok tunnel URL
+   */
+  getNgrokTunnelUrl(): string | null {
+    return this.ngrokTunnelUrl;
   }
 
   /**

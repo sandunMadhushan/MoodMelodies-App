@@ -1,4 +1,4 @@
-import { networkDiscovery } from './networkDiscovery';
+import { getFaceApiEndpoint } from './dynamicNetworkDiscovery';
 
 export interface MoodResult {
   mood: string;
@@ -17,15 +17,16 @@ export interface MoodResult {
 class FaceApiService {
   /**
    * Dynamic endpoint discovery - works on any laptop automatically!
+   * Now also supports tunnel mode endpoints with dynamic ngrok URL detection
    */
   private async getApiBaseUrl(): Promise<string> {
     if (!__DEV__) {
       return 'https://your-face-api-service.herokuapp.com'; // Production
     }
 
-    // Development - Auto-discover working endpoint
+    // Development - Auto-discover working endpoint with dynamic ngrok support
     try {
-      return await networkDiscovery.getWorkingEndpoint();
+      return await getFaceApiEndpoint();
     } catch (error) {
       console.warn('Failed to auto-discover endpoint, using localhost:', error);
       return 'http://localhost:3001'; // Final fallback
@@ -41,15 +42,12 @@ class FaceApiService {
         return await this.analyzeWithAPI(imageUri);
       } catch (apiError) {
         console.warn('API analysis failed, using mock:', apiError);
-        console.warn(`💡 Troubleshooting tips:`);
-        console.warn(
-          `   • Make sure phone and computer are on the same WiFi network`
-        );
-        console.warn(
-          `   • Check if Face API server is running on your computer`
-        );
-        console.warn(`   • Try restarting the Face API server`);
-        console.warn(`   • If using mobile hotspot, try regular WiFi instead`);
+        console.warn(`💡 Tunnel Mode Status:`);
+        console.warn(`   • Expo Tunnel: ✅ Working (app loaded via tunnel)`);
+        console.warn(`   • Face API Tunnel: ❌ Check ngrok setup`);
+        console.warn(`   • Current URL: https://e4da985e45e8.ngrok-free.app`);
+        console.warn(`   • Using realistic mock analysis instead`);
+        console.warn(`   • For real analysis: verify ngrok tunnel is running`);
         return await this.analyzeMoodMock(imageUri);
       }
     } catch (error) {
@@ -75,12 +73,21 @@ class FaceApiService {
     try {
       // Call face API service with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      console.log(
+        `🌐 Making API request to: ${primaryUrl}/analyze-mood-base64`
+      );
+      console.log(`📊 Request headers:`, {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'any',
+      });
 
       const apiResponse = await fetch(`${primaryUrl}/analyze-mood-base64`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'any',
         },
         body: JSON.stringify({
           imageData: base64,
@@ -90,8 +97,16 @@ class FaceApiService {
 
       clearTimeout(timeoutId);
 
+      console.log(
+        `📊 API response status: ${apiResponse.status} ${apiResponse.statusText}`
+      );
+
       if (!apiResponse.ok) {
-        throw new Error(`API request failed: ${apiResponse.status}`);
+        const errorText = await apiResponse.text();
+        console.log(`📋 API error response:`, errorText);
+        throw new Error(
+          `API request failed: ${apiResponse.status} - ${errorText}`
+        );
       }
 
       const result = await apiResponse.json();
@@ -100,10 +115,7 @@ class FaceApiService {
     } catch (error) {
       console.warn(`❌ Auto-discovered endpoint failed: ${primaryUrl}`);
       console.warn(`❌ Error details:`, error);
-      console.warn(`🔄 Clearing cache and will rediscover next time`);
-
-      // Clear cache and force rediscovery for next time
-      networkDiscovery.clearCache();
+      console.warn(`🔄 Will rediscover endpoint next time`);
 
       // Throw error to trigger fallback to mock
       throw new Error(`Could not connect to Face API service at ${primaryUrl}`);
