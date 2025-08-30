@@ -81,6 +81,7 @@ npx expo start
 ✅ **Spotify Integration** - Real music with metadata
 ✅ **Fallback System** - Always works even if Spotify fails
 ✅ **Cross-Platform** - Works on any laptop/network
+✅ **Automatic Port Conflict Resolution** - Fixes stuck processes automatically
 
 ## 🔧 Troubleshooting
 
@@ -97,6 +98,17 @@ npx expo start
 ```bash
 # Make the script executable first:
 chmod +x start-auto.sh
+./start-auto.sh
+```
+
+#### Port 3001 conflict:
+
+The script now **automatically detects and fixes** port conflicts! If you still have issues:
+
+```bash
+# Use the manual cleanup script:
+./cleanup-port.sh
+# Then try again:
 ./start-auto.sh
 ```
 

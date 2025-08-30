@@ -19,16 +19,46 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to check if a port is in use
-check_port() {
-    local port=$1
+# Function to force kill processes on port 3001
+kill_port_3001() {
+    echo "🔧 Attempting to free port 3001..."
+    
+    # Try different methods to find and kill the process
     if command_exists lsof; then
-        lsof -i :$port >/dev/null 2>&1
-    elif command_exists netstat; then
-        netstat -an | grep ":$port " >/dev/null 2>&1
-    else
-        return 1
+        # Linux/Mac method
+        PID=$(lsof -ti:3001 2>/dev/null)
+        if [ -n "$PID" ]; then
+            echo "Found process $PID using port 3001, killing it..."
+            kill -9 $PID 2>/dev/null
+            sleep 2
+            return 0
+        fi
     fi
+    
+    # Windows Git Bash method
+    if command_exists taskkill; then
+        echo "Attempting to kill Node.js processes..."
+        taskkill //F //IM node.exe //T 2>/dev/null || echo "No node.exe processes found"
+        sleep 2
+        return 0
+    fi
+    
+    # Alternative Windows method
+    if command_exists powershell.exe; then
+        echo "Using PowerShell to find and kill process..."
+        powershell.exe -Command "
+            \$process = Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
+            if (\$process) {
+                Stop-Process -Id \$process -Force -ErrorAction SilentlyContinue
+                Write-Host 'Killed process using port 3001'
+            }
+        " 2>/dev/null
+        sleep 2
+        return 0
+    fi
+    
+    echo "⚠️  Could not automatically kill the process. Please manually stop any Node.js processes and try again."
+    return 1
 }
 
 # Function to get local IP addresses
@@ -89,22 +119,45 @@ if [ ! -d "face-api-service/node_modules" ]; then
     cd ..
 fi
 
+# Function to check if a port is in use
+check_port() {
+    local port=$1
+    if command_exists lsof; then
+        lsof -i :$port >/dev/null 2>&1
+    elif command_exists netstat; then
+        netstat -an | grep ":$port " >/dev/null 2>&1
+    else
+        # Try to connect to the port
+        timeout 1 bash -c "</dev/tcp/localhost/$port" 2>/dev/null
+    fi
+}
+
 # Step 4: Start Face API service
 echo ""
 echo "🧠 Starting Face API Server..."
 
 if check_port 3001; then
-    echo -e "${YELLOW}⚠️  Port 3001 is already in use. Face API server might already be running.${NC}"
-    echo "Testing existing server..."
+    echo -e "${YELLOW}⚠️  Port 3001 is already in use. Testing existing server...${NC}"
     
     if curl -s http://localhost:3001/health >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Face API server is already running and responding${NC}"
     else
-        echo -e "${RED}❌ Port 3001 is occupied but server is not responding${NC}"
-        echo "Please stop the process using port 3001 and try again"
-        exit 1
+        echo -e "${YELLOW}❌ Port 3001 is occupied but server is not responding${NC}"
+        echo -e "${BLUE}🔧 Attempting to fix this automatically...${NC}"
+        
+        if kill_port_3001; then
+            echo -e "${GREEN}✅ Successfully freed port 3001${NC}"
+            sleep 2
+        else
+            echo -e "${RED}❌ Could not free port 3001 automatically${NC}"
+            echo "Please manually stop any Node.js processes and run the script again"
+            exit 1
+        fi
     fi
-else
+fi
+
+# Check if we need to start the server (either it wasn't running or we killed it)
+if ! curl -s http://localhost:3001/health >/dev/null 2>&1; then
     echo "Starting Face API service in background..."
     cd face-api-service
     
