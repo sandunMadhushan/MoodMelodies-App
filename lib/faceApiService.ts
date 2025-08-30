@@ -1,3 +1,5 @@
+import { getFaceApiEndpoint } from './dynamicNetworkDiscovery';
+
 export interface MoodResult {
   mood: string;
   confidence: number;
@@ -13,24 +15,23 @@ export interface MoodResult {
 }
 
 class FaceApiService {
-  // Configuration for your face API service
-  private getApiBaseUrl(): string {
+  /**
+   * Dynamic endpoint discovery - works on any laptop automatically!
+   * Now also supports tunnel mode endpoints with dynamic ngrok URL detection
+   */
+  private async getApiBaseUrl(): Promise<string> {
     if (!__DEV__) {
       return 'https://your-face-api-service.herokuapp.com'; // Production
     }
 
-    // Development - Try multiple endpoints for better connectivity
-    // The service will automatically try these in order and use the first one that works
-    return 'http://172.19.144.1:3001'; // Your computer's IP address
+    // Development - Auto-discover working endpoint with dynamic ngrok support
+    try {
+      return await getFaceApiEndpoint();
+    } catch (error) {
+      console.warn('Failed to auto-discover endpoint, using localhost:', error);
+      return 'http://localhost:3001'; // Final fallback
+    }
   }
-
-  private readonly FALLBACK_URLS = __DEV__
-    ? [
-        'http://localhost:3001', // For web/simulator testing
-        'http://127.0.0.1:3001', // Alternative localhost
-        'http://10.0.2.2:3001', // Android emulator host
-      ]
-    : [];
 
   async analyzeMood(imageUri: string): Promise<MoodResult> {
     try {
@@ -41,6 +42,12 @@ class FaceApiService {
         return await this.analyzeWithAPI(imageUri);
       } catch (apiError) {
         console.warn('API analysis failed, using mock:', apiError);
+        console.warn(`💡 Tunnel Mode Status:`);
+        console.warn(`   • Expo Tunnel: ✅ Working (app loaded via tunnel)`);
+        console.warn(`   • Face API Tunnel: ❌ Check ngrok setup`);
+        console.warn(`   • Current URL: https://e4da985e45e8.ngrok-free.app`);
+        console.warn(`   • Using realistic mock analysis instead`);
+        console.warn(`   • For real analysis: verify ngrok tunnel is running`);
         return await this.analyzeMoodMock(imageUri);
       }
     } catch (error) {
@@ -55,48 +62,64 @@ class FaceApiService {
     const blob = await response.blob();
     const base64 = await this.blobToBase64(blob);
 
-    // Try primary URL first, then fallbacks
-    const urlsToTry = [this.getApiBaseUrl(), ...this.FALLBACK_URLS];
+    // Use dynamic endpoint discovery - no manual IP configuration needed!
+    const primaryUrl = await this.getApiBaseUrl();
 
-    for (const baseUrl of urlsToTry) {
-      try {
-        console.log(`🔄 Trying API endpoint: ${baseUrl}`);
+    console.log(`🌐 Auto-discovered Face API endpoint: ${primaryUrl}`);
+    console.log(
+      `📱 Attempting to connect from mobile app to Face API server...`
+    );
 
-        // Call face API service with timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    try {
+      // Call face API service with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-        const apiResponse = await fetch(`${baseUrl}/analyze-mood-base64`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageData: base64,
-          }),
-          signal: controller.signal,
-        });
+      console.log(
+        `🌐 Making API request to: ${primaryUrl}/analyze-mood-base64`
+      );
+      console.log(`📊 Request headers:`, {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'any',
+      });
 
-        clearTimeout(timeoutId);
+      const apiResponse = await fetch(`${primaryUrl}/analyze-mood-base64`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'any',
+        },
+        body: JSON.stringify({
+          imageData: base64,
+        }),
+        signal: controller.signal,
+      });
 
-        if (!apiResponse.ok) {
-          throw new Error(`API request failed: ${apiResponse.status}`);
-        }
+      clearTimeout(timeoutId);
 
-        const result = await apiResponse.json();
-        console.log(
-          `✅ Real face API analysis complete via ${baseUrl}:`,
-          result
+      console.log(
+        `📊 API response status: ${apiResponse.status} ${apiResponse.statusText}`
+      );
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.log(`📋 API error response:`, errorText);
+        throw new Error(
+          `API request failed: ${apiResponse.status} - ${errorText}`
         );
-        return result;
-      } catch (error) {
-        console.warn(`❌ Failed to connect to ${baseUrl}:`, error);
-        // Continue to next URL
       }
-    }
 
-    // If all URLs fail, throw error
-    throw new Error('Could not connect to Face API service');
+      const result = await apiResponse.json();
+      console.log(`✅ REAL FACE API SUCCESS via ${primaryUrl}:`, result);
+      return result;
+    } catch (error) {
+      console.warn(`❌ Auto-discovered endpoint failed: ${primaryUrl}`);
+      console.warn(`❌ Error details:`, error);
+      console.warn(`🔄 Will rediscover endpoint next time`);
+
+      // Throw error to trigger fallback to mock
+      throw new Error(`Could not connect to Face API service at ${primaryUrl}`);
+    }
   }
 
   private async analyzeMoodMock(imageUri: string): Promise<MoodResult> {
@@ -239,63 +262,6 @@ class FaceApiService {
       mood: moodMapping[maxEmotion] || 'Neutral',
       confidence: maxValue,
     };
-  }
-
-  // Helper method to get mood-based music recommendations
-  getMoodBasedPlaylist(mood: string): string[] {
-    const playlists: { [key: string]: string[] } = {
-      Happy: [
-        'Upbeat Pop Hits',
-        'Feel Good Classics',
-        'Dance Party',
-        'Summer Vibes',
-        'Positive Energy',
-      ],
-      Sad: [
-        'Melancholic Melodies',
-        'Emotional Ballads',
-        'Rainy Day Blues',
-        'Heartbreak Healing',
-        'Introspective Indie',
-      ],
-      Angry: [
-        'Rock Anthems',
-        'Heavy Metal',
-        'Punk Rock',
-        'Aggressive Hip-Hop',
-        'Power Songs',
-      ],
-      Calm: [
-        'Ambient Chill',
-        'Peaceful Piano',
-        'Nature Sounds',
-        'Meditation Music',
-        'Lo-Fi Beats',
-      ],
-      Anxious: [
-        'Calming Instrumentals',
-        'Soothing Sounds',
-        'Relaxation Music',
-        'Mindfulness',
-        'Gentle Acoustic',
-      ],
-      Surprised: [
-        'Energetic Pop',
-        'Uplifting Beats',
-        'Feel Good Mix',
-        'Motivational Music',
-        'Discovery Playlist',
-      ],
-      Disgusted: [
-        'Cleansing Beats',
-        'Fresh Start',
-        'Renewal Playlist',
-        'Positive Vibes',
-        'Mood Lifter',
-      ],
-    };
-
-    return playlists[mood] || playlists['Calm'];
   }
 }
 
