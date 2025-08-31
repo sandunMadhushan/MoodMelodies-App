@@ -1,6 +1,8 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+// NotFoundScreen: Displays a message when a user navigates to a non-existent route
+
 export default function NotFoundScreen() {
   return (
     <>
