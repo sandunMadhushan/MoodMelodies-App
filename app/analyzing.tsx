@@ -20,12 +20,14 @@ export default function AnalyzingScreen() {
   const [moodResult, setMoodResult] = useState<MoodResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+// Run mood analysis when photoUri changes
   useEffect(() => {
     if (photoUri) {
       analyzeMood();
     }
   }, [photoUri]);
 
+    // Analyze mood using faceApiService
   const analyzeMood = async () => {
     try {
       setIsAnalyzing(true);
@@ -61,6 +63,7 @@ export default function AnalyzingScreen() {
     }
   };
 
+  // Get color for mood display
   const getMoodColor = (mood: string): string => {
     const moodColors: { [key: string]: string } = {
       Happy: '#FFD700',
@@ -74,6 +77,7 @@ export default function AnalyzingScreen() {
     return moodColors[mood] || '#FFFFFF';
   };
 
+  // Get emoji for mood display
   const getMoodEmoji = (mood: string): string => {
     const moodEmojis: { [key: string]: string } = {
       Happy: '😊',
@@ -192,6 +196,7 @@ export default function AnalyzingScreen() {
   );
 }
 
+// Styles for AnalyzingScreen components
 const styles = StyleSheet.create({
   container: {
     flex: 1,

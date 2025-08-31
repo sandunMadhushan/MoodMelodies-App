@@ -27,6 +27,7 @@ export default function PlayerScreen() {
     mood: string;
   }>();
 
+   // State variables for playback, song info, and UI
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(180);
@@ -37,7 +38,7 @@ export default function PlayerScreen() {
   const [isSeeking, setIsSeeking] = useState(false);
   const [isPlaybackLoading, setIsPlaybackLoading] = useState(false);
 
-  // Load playlist on mount
+   // Load playlist when component mounts or mood changes
   useEffect(() => {
     loadPlaylist();
     return () => {

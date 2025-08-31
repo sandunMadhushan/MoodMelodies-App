@@ -16,11 +16,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
 
+// Main authentication screen for login and sign up
 export default function AuthScreen() {
   const { signIn, signUp, session } = useAuth();
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  // Form data for authentication
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,11 +32,12 @@ export default function AuthScreen() {
     lastName: '',
   });
 
-
+// Handle input changes for form fields
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+   // Handle form submission for login or sign up
   const handleSubmit = async () => {
     if (!formData.email || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -79,6 +83,7 @@ export default function AuthScreen() {
     }
   };
 
+  // Toggle between login and sign up modes and reset form
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setFormData({
@@ -221,6 +226,7 @@ export default function AuthScreen() {
   );
 }
 
+// Styles for authentication screen components
 const styles = StyleSheet.create({
   container: {
     flex: 1,
