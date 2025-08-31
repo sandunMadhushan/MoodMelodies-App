@@ -215,6 +215,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 40,
   },
+  permissionButtonText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#7B0057',
+    fontWeight: '600',
+  },
   permissionButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 50,
@@ -229,10 +235,5 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  permissionButtonText: {
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#7B0057',
-    fontWeight: '600',
-  },
+  
 });
