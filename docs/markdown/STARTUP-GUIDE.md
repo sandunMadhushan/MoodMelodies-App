@@ -192,7 +192,7 @@ The app now uses **real face-api.js analysis** with:
 ### LAN Mode
 
 - **Use Case**: Local network testing
-- **Benefits**: Faster, no external dependencies
+- **Benefits**: Faster, no additional dependencies
 - **Requirements**: Same WiFi network
 
 ## 📋 Current Status

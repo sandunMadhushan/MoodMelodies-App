@@ -236,7 +236,7 @@ mood-melodies-app/
 │   ├── DEV-GUIDE.md           # Development guide
 │   └── markdown/              # All documentation files
 ├── 📋 scripts/                 # Development utilities
-│   ├── startup/               # Legacy startup scripts
+│   ├── startup/               # Startup scripts
 │   ├── cleanup-port.sh        # Port management
 │   ├── find-ip.js            # Network discovery
 │   └── test-network.js       # Network testing

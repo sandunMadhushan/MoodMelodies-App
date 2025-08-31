@@ -40,17 +40,15 @@ class MusicService {
         playThroughEarpieceAndroid: false,
       });
       this.isInitialized = true;
-      console.log('🎵 LOCAL MUSIC ONLY - Audio system initialized');
-      console.log('🚫 NO Spotify, NO SoundCloud, NO external sources');
+      console.log('🎵 Audio system initialized');
     } catch (error) {
       console.error('❌ Failed to initialize audio:', error);
     }
   }
 
-  // Get LOCAL playlists based on mood (NO SPOTIFY, NO EXTERNAL SOURCES)
+  // Get playlists based on mood
   async getPlaylistByMood(mood: string): Promise<Playlist> {
-    console.log(`🎵 Loading LOCAL playlist for mood: ${mood}`);
-    console.log(`🚫 NO external sources - using LOCAL files only`);
+    console.log(`🎵 Loading playlist for mood: ${mood}`);
     console.log(`📁 Looking in: assets/audio/${mood.toLowerCase()}/`);
 
     return this.getLocalPlaylist(mood);
@@ -58,7 +56,7 @@ class MusicService {
 
   // Get local playlist with your actual music files
   private getLocalPlaylist(mood: string): Playlist {
-    console.log(`📁 Loading BUNDLED songs for ${mood} mood`);
+    console.log(`📁 Loading songs for ${mood} mood`);
 
     // Convert audioAssets to Song format and use actual bundled files
     const moodKey = mood.toLowerCase() as keyof typeof audioAssets;
@@ -75,7 +73,7 @@ class MusicService {
       asset: asset.asset, // This is the bundled audio file
     }));
 
-    console.log(`🎵 Loaded ${songs.length} BUNDLED songs for ${mood} mood`);
+    console.log(`🎵 Loaded ${songs.length} songs for ${mood} mood`);
     console.log(
       `� These are actual bundled assets in: assets/audio/${mood.toLowerCase()}/`
     );

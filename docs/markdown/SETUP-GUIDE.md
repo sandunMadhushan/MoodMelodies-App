@@ -133,8 +133,8 @@ npx expo start
 
 ✅ **Automatic Network Discovery** - No manual IP configuration!
 ✅ **Real Face Analysis** - Uses AI to detect emotions
-✅ **Spotify Integration** - Real music with metadata
-✅ **Fallback System** - Always works even if Spotify fails
+✅ **Local Music Integration** - Your own music with metadata
+✅ **Bundled System** - Always works with your audio files
 ✅ **Cross-Platform** - Works on any laptop/network
 ✅ **Automatic Port Conflict Resolution** - Fixes stuck processes automatically
 
@@ -171,7 +171,7 @@ The script now **automatically detects and fixes** port conflicts! If you still 
 
 The scripts now use **LAN mode instead of tunnel** for better reliability:
 
-- ✅ **More reliable** (no external dependencies)
+- ✅ **More reliable** (no additional dependencies)
 - ✅ **Better Face API connectivity** (same network)
 - ✅ **Faster** (no internet routing)
 
@@ -192,7 +192,7 @@ npx expo start --tunnel
 
 1. ✅ Check internet connection
 2. ✅ Try different tracks in the playlist
-3. ✅ Fallback audio will always work even if Spotify fails
+3. ✅ Local audio will always work with your music files
 
 ### If App Won't Start:
 
