@@ -1,4 +1,5 @@
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { audioAssets, demoAudioAssets, AudioAsset } from './audioAssets';
 
 export interface Song {
   id: string;
@@ -9,6 +10,7 @@ export interface Song {
   duration: number;
   url: string;
   preview_url: string;
+  asset?: any; // Audio asset from require()
 }
 
 export interface Playlist {
@@ -38,319 +40,117 @@ class MusicService {
         playThroughEarpieceAndroid: false,
       });
       this.isInitialized = true;
-      console.log('🎵 Audio system initialized');
+      console.log('🎵 LOCAL MUSIC ONLY - Audio system initialized');
+      console.log('🚫 NO Spotify, NO SoundCloud, NO external sources');
     } catch (error) {
       console.error('❌ Failed to initialize audio:', error);
     }
   }
 
-  // Get curated playlists based on mood
+  // Get LOCAL playlists based on mood (NO SPOTIFY, NO EXTERNAL SOURCES)
   async getPlaylistByMood(mood: string): Promise<Playlist> {
-    console.log(`🎵 Fetching playlist for mood: ${mood}`);
+    console.log(`🎵 Loading LOCAL playlist for mood: ${mood}`);
+    console.log(`🚫 NO external sources - using LOCAL files only`);
+    console.log(`📁 Looking in: assets/audio/${mood.toLowerCase()}/`);
 
-    try {
-      // Try Spotify API first (requires setup)
-      try {
-        return await this.fetchFromSpotify(mood);
-      } catch (spotifyError) {
-        console.warn(
-          '❌ Spotify failed, using local fallback...',
-          spotifyError
-        );
-
-        // Use local fallback
-        return this.getFallbackPlaylist(mood);
-      }
-    } catch (error) {
-      console.error('❌ Music API failed:', error);
-      // Always provide fallback
-      return this.getFallbackPlaylist(mood);
-    }
+    return this.getLocalPlaylist(mood);
   }
 
-  private async fetchFromSpotify(mood: string): Promise<Playlist> {
-    // Spotify Web API implementation
-    const clientId = '933b8082a051465bb4137262d0ea7bf6'; // Your client ID
-    const clientSecret = '3bd19e948c2e4714992d8473ae59eb0d'; // Your secret
+  // Get local playlist with your actual music files
+  private getLocalPlaylist(mood: string): Playlist {
+    console.log(`📁 Loading BUNDLED songs for ${mood} mood`);
 
-    try {
-      // Get access token using Client Credentials flow
-      const tokenResponse = await fetch(
-        'https://accounts.spotify.com/api/token',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-          },
-          body: 'grant_type=client_credentials',
-        }
-      );
+    // Convert audioAssets to Song format and use actual bundled files
+    const moodKey = mood.toLowerCase() as keyof typeof audioAssets;
+    const assets = audioAssets[moodKey] || audioAssets.happy;
 
-      const tokenData = await tokenResponse.json();
-      const accessToken = tokenData.access_token;
+    const songs: Song[] = assets.map((asset: AudioAsset) => ({
+      id: asset.id,
+      title: asset.title,
+      artist: asset.artist,
+      image: asset.image,
+      duration: asset.duration,
+      url: '', // Will use asset instead
+      preview_url: '', // Will use asset instead
+      asset: asset.asset, // This is the bundled audio file
+    }));
 
-      // Map moods to Spotify search queries - simplified for better results
-      const moodQueries: { [key: string]: string } = {
-        Happy: 'genre:pop',
-        Sad: 'genre:indie',
-        Angry: 'genre:rock',
-        Calm: 'genre:ambient',
-        Anxious: 'genre:classical',
-        Surprised: 'genre:electronic',
-        Disgusted: 'genre:alternative',
-      };
-
-      const query = moodQueries[mood] || 'genre:pop';
-
-      // Search for tracks
-      const searchResponse = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-          query
-        )}&type=track&limit=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      const searchData = await searchResponse.json();
-
-      if (!searchData.tracks || searchData.tracks.items.length === 0) {
-        // Try a broader search if genre-specific search fails
-        console.log(`No tracks found for ${query}, trying broader search...`);
-
-        const broadQuery =
-          mood === 'Angry' ? 'rock' : mood === 'Sad' ? 'ballad' : 'pop';
-        const fallbackResponse = await fetch(
-          `https://api.spotify.com/v1/search?q=${broadQuery}&type=track&limit=10`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        const fallbackData = await fallbackResponse.json();
-        if (!fallbackData.tracks || fallbackData.tracks.items.length === 0) {
-          throw new Error('No Spotify tracks found');
-        }
-
-        // Update searchData with fallback results
-        searchData.tracks = fallbackData.tracks;
-      }
-
-      const songs: Song[] = searchData.tracks.items.map((track: any) => ({
-        id: track.id,
-        title: track.name,
-        artist: track.artists[0]?.name || 'Unknown Artist',
-        album: track.album?.name || '',
-        image: track.album?.images[0]?.url || this.getDefaultImage(mood),
-        duration: Math.floor(track.duration_ms / 1000),
-        url: track.preview_url || this.getFallbackAudioUrl(mood), // Use fallback if no preview
-        preview_url: track.preview_url || this.getFallbackAudioUrl(mood),
-      }));
-
-      // Debug logging
-      const tracksWithPreviews = songs.filter((song) =>
-        song.url.startsWith('https://p.scdn.co')
-      );
-      console.log(
-        `📊 Spotify tracks: ${songs.length} total, ${tracksWithPreviews.length} with previews`
-      );
-
-      console.log(`✅ Spotify found ${songs.length} tracks for ${mood}`);
-
-      return {
-        id: `spotify_${mood.toLowerCase()}`,
-        name: this.getPlaylistName(mood),
-        description: `${this.getPlaylistDescription(mood)} (Spotify)`,
-        mood,
-        songs,
-      };
-    } catch (error) {
-      console.error('❌ Spotify API error:', error);
-      throw error;
-    }
-  }
-
-  private getFallbackPlaylist(mood: string): Playlist {
-    // Working URLs from reliable free sources - using only tested URLs
-    const fallbackSongs: { [key: string]: Song[] } = {
-      Happy: [
-        {
-          id: '1',
-          title: 'Happy Upbeat',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 180,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-        },
-        {
-          id: '2',
-          title: 'Cheerful Melody',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-      ],
-      Sad: [
-        {
-          id: '3',
-          title: 'Melancholy',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-        {
-          id: '4',
-          title: 'Emotional Ballad',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 180,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-        },
-      ],
-      Angry: [
-        {
-          id: '5',
-          title: 'Rock Power',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-        {
-          id: '6',
-          title: 'Heavy Energy',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 180,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-        },
-      ],
-      Calm: [
-        {
-          id: '7',
-          title: 'Peaceful',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-        {
-          id: '8',
-          title: 'Serene Sounds',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 180,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-        },
-      ],
-      Anxious: [
-        {
-          id: '9',
-          title: 'Soothing',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-      ],
-      Surprised: [
-        {
-          id: '10',
-          title: 'Energetic',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 180,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-        },
-      ],
-      Disgusted: [
-        {
-          id: '11',
-          title: 'Alternative',
-          artist: 'Sample Music',
-          image:
-            'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-          duration: 121,
-          url: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-          preview_url:
-            'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-        },
-      ],
-    };
-
-    const songs = fallbackSongs[mood] || fallbackSongs['Happy'];
+    console.log(`🎵 Loaded ${songs.length} BUNDLED songs for ${mood} mood`);
     console.log(
-      `✅ Using fallback playlist for ${mood} (${songs.length} songs)`
+      `� These are actual bundled assets in: assets/audio/${mood.toLowerCase()}/`
     );
 
     return {
-      id: `fallback_${mood.toLowerCase()}`,
+      id: `bundled_${mood.toLowerCase()}`,
       name: this.getPlaylistName(mood),
-      description: `${this.getPlaylistDescription(mood)} (Demo)`,
+      description: this.getPlaylistDescription(mood),
       mood,
       songs,
     };
   }
 
+  private getPlaylistName(mood: string): string {
+    const names: { [key: string]: string } = {
+      Happy: 'Local Feel Good Hits',
+      Sad: 'Local Emotional Ballads',
+      Angry: 'Local Rock Anthems',
+      Calm: 'Local Peaceful Moments',
+      Anxious: 'Local Calming Sounds',
+      Surprised: 'Local Discovery Mix',
+      Disgusted: 'Local Raw & Real',
+    };
+    return names[mood] || 'Local Mixed Collection';
+  }
+
+  private getPlaylistDescription(mood: string): string {
+    const descriptions: { [key: string]: string } = {
+      Happy:
+        'Your local upbeat songs - Ed Sheeran, Justin Bieber, Justin Timberlake',
+      Sad: 'Your local melancholic melodies for reflection',
+      Angry: 'Your local powerful tracks to channel energy',
+      Calm: 'Your local peaceful compositions for relaxation',
+      Anxious: 'Your local gentle sounds to ease the mind',
+      Surprised: 'Your local Taylor Swift surprise songs and discoveries',
+      Disgusted: 'Your local authentic music for real moments',
+    };
+    return descriptions[mood] || 'Your curated local collection';
+  }
+
   async playTrack(song: Song): Promise<void> {
     try {
-      console.log(`🎵 Loading track: ${song.title} by ${song.artist}`);
-
-      // Stop current track if playing
-      if (this.sound) {
-        await this.sound.unloadAsync();
-        this.sound = null;
-      }
-
-      // Create new sound object
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: song.url },
-        {
-          shouldPlay: true,
-          isLooping: false,
-          volume: 1.0,
-        }
+      console.log(`🎵 Loading BUNDLED track: ${song.title} by ${song.artist}`);
+      console.log(
+        `� Using bundled asset from: assets/audio/[mood]/${song.title}.mp3`
       );
 
+      // CRITICAL: Stop and clean up any existing audio completely
+      await this.cleanup();
+
+      // Small delay to ensure complete cleanup
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Use bundled asset if available, otherwise fallback to demo
+      const audioSource = song.asset || demoAudioAssets.demo1;
+
+      // Create new sound object with bundled asset
+      const { sound } = await Audio.Sound.createAsync(audioSource, {
+        shouldPlay: false, // Don't auto-play, we'll control it manually
+        isLooping: false,
+        volume: 1.0,
+      });
+
       this.sound = sound;
-      console.log('✅ Track loaded and playing');
+
+      // Start playing after setup is complete
+      await this.sound.playAsync();
+
+      if (song.asset) {
+        console.log('✅ BUNDLED track loaded and playing');
+      } else {
+        console.log(
+          '✅ Demo track loaded and playing (add your MP3 files to assets/audio/)'
+        );
+      }
 
       // Set up playback status listener
       this.sound.setOnPlaybackStatusUpdate((status) => {
@@ -361,7 +161,7 @@ class MusicService {
         }
       });
     } catch (error) {
-      console.error('❌ Error playing track:', error);
+      console.error('❌ Error playing BUNDLED track:', error);
       throw new Error(`Failed to play ${song.title}: ${error}`);
     }
   }
@@ -369,100 +169,111 @@ class MusicService {
   async pauseTrack(): Promise<void> {
     if (this.sound) {
       await this.sound.pauseAsync();
-      console.log('⏸️ Track paused');
+      console.log('⏸️ LOCAL track paused');
     }
   }
 
   async resumeTrack(): Promise<void> {
     if (this.sound) {
       await this.sound.playAsync();
-      console.log('▶️ Track resumed');
+      console.log('▶️ LOCAL track resumed');
     }
   }
 
   async stopTrack(): Promise<void> {
     if (this.sound) {
       await this.sound.stopAsync();
-      console.log('⏹️ Track stopped');
+      await this.sound.unloadAsync();
+      this.sound = null;
+      console.log('⏹️ LOCAL track stopped');
     }
   }
 
   async getPlaybackStatus(): Promise<any> {
     if (this.sound) {
-      return await this.sound.getStatusAsync();
+      try {
+        const status = await this.sound.getStatusAsync();
+        console.log('📊 Playback status retrieved');
+        return status;
+      } catch (error) {
+        console.error('❌ Error getting playback status:', error);
+        return null;
+      }
     }
     return null;
   }
 
   async setPosition(positionMillis: number): Promise<void> {
     if (this.sound) {
-      await this.sound.setPositionAsync(positionMillis);
+      try {
+        await this.sound.setPositionAsync(positionMillis);
+        console.log(`⏭️ Seeked to position: ${positionMillis}ms`);
+      } catch (error) {
+        console.error('❌ Error seeking position:', error);
+      }
     }
   }
 
-  private getPlaylistName(mood: string): string {
-    const names: { [key: string]: string } = {
-      Happy: 'Feel Good Hits',
-      Sad: 'Melancholic Melodies',
-      Angry: 'Rock Anthems',
-      Calm: 'Peaceful Moments',
-      Anxious: 'Calming Sounds',
-      Surprised: 'Discovery Mix',
-      Disgusted: 'Alternative Vibes',
-    };
-    return names[mood] || 'Mixed Playlist';
+  async getCurrentPosition(): Promise<number> {
+    if (this.sound) {
+      try {
+        const status = await this.sound.getStatusAsync();
+        if (status.isLoaded) {
+          return status.positionMillis || 0;
+        }
+      } catch (error) {
+        console.error('❌ Error getting current position:', error);
+      }
+    }
+    return 0;
   }
 
-  private getPlaylistDescription(mood: string): string {
-    const descriptions: { [key: string]: string } = {
-      Happy: 'Upbeat songs to keep your energy high',
-      Sad: 'Songs for when you need to feel',
-      Angry: 'Channel your energy with powerful music',
-      Calm: 'Gentle melodies for relaxation',
-      Anxious: 'Soothing sounds to ease anxiety',
-      Surprised: 'New sounds to explore',
-      Disgusted: 'Raw and authentic music',
-    };
-    return descriptions[mood] || 'A curated mix for your mood';
+  async getDuration(): Promise<number> {
+    if (this.sound) {
+      try {
+        const status = await this.sound.getStatusAsync();
+        if (status.isLoaded) {
+          return status.durationMillis || 0;
+        }
+      } catch (error) {
+        console.error('❌ Error getting duration:', error);
+      }
+    }
+    return 0;
   }
 
-  private getDefaultImage(mood: string): string {
-    const images: { [key: string]: string } = {
-      Happy:
-        'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=400',
-      Sad: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-      Angry:
-        'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=400',
-      Calm: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=400',
-    };
-    return images[mood] || images['Happy'];
+  async isPlaying(): Promise<boolean> {
+    if (this.sound) {
+      try {
+        const status = await this.sound.getStatusAsync();
+        return status.isLoaded && status.isPlaying;
+      } catch (error) {
+        console.error('❌ Error checking playing status:', error);
+      }
+    }
+    return false;
   }
 
-  private getFallbackAudioUrl(mood: string): string {
-    // Only use tested, working audio URLs
-    const fallbackUrls: { [key: string]: string } = {
-      Happy:
-        'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-      Sad: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-      Angry:
-        'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-      Calm: 'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-      Anxious:
-        'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-      Surprised:
-        'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
-      Disgusted:
-        'https://commondatastorage.googleapis.com/codeskulptor-assets/week7-button.m4a',
-    };
-    return fallbackUrls[mood] || fallbackUrls['Happy'];
-  }
-
-  // Clean up resources
   async cleanup(): Promise<void> {
     if (this.sound) {
-      await this.sound.unloadAsync();
-      this.sound = null;
+      try {
+        // Stop the sound first
+        await this.sound.stopAsync();
+        console.log('⏹️ Sound stopped');
+
+        // Then unload it completely
+        await this.sound.unloadAsync();
+        console.log('🗑️ Sound unloaded');
+
+        // Clear the reference
+        this.sound = null;
+      } catch (error) {
+        console.error('❌ Error during cleanup:', error);
+        // Force clear the reference even if cleanup fails
+        this.sound = null;
+      }
     }
+    console.log('🧹 LOCAL music service cleaned up');
   }
 }
 

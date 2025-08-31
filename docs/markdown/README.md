@@ -2,7 +2,7 @@
 
 **AI-Powered Music Recommendation App Based on Facial Emotion Analysis**
 
-A React Native mobile application that captures your photo, analyzes your mood using AI facial recognition, and provides personalized music playlists from Spotify and other free music sources.
+A React Native mobile application that captures your photo, analyzes your mood using AI facial recognition, and provides personalized music playlists from locally stored songs organized by mood.
 
 ![Mood Melodies App](./assets/images/Logo%20Trans.png)
 
@@ -48,26 +48,26 @@ start-auto.bat
 
 - **📸 Photo Capture**: Take photos using device camera
 - **🤖 AI Mood Analysis**: Real-time facial emotion detection using face-api.js
-- **🎵 Smart Music Recommendations**: Curated playlists based on detected emotions
+- **🎵 Smart Music Recommendations**: Curated local playlists based on detected emotions
 - **🎧 Integrated Music Player**: Play, pause, skip, and control music playback
 - **💾 Mood History**: Track your emotional journey over time
 - **🔐 User Authentication**: Secure login/signup with Supabase
 
 ### 🎭 Supported Emotions
 
-- **😊 Happy** - Upbeat, energetic tracks
-- **😢 Sad** - Melancholic, emotional ballads
-- **😠 Angry** - Rock, intense music
-- **😌 Calm** - Peaceful, relaxing sounds
-- **😰 Anxious** - Soothing, calming melodies
-- **😲 Surprised** - Discovery mix, unexpected genres
-- **🤢 Disgusted** - Alternative, raw music
+- **😊 Happy** - Upbeat, energetic local tracks
+- **😢 Sad** - Melancholic, emotional local ballads
+- **😠 Angry** - Rock, intense local music
+- **😌 Calm** - Peaceful, relaxing local sounds
+- **😰 Anxious** - Soothing, calming local melodies
+- **😲 Surprised** - Discovery mix from local collection
+- **🤢 Disgusted** - Alternative, raw local music
 
-### 🎼 Music Sources
+### 🎼 Music System
 
-- **🎯 Primary**: Spotify Web API (10M+ tracks)
-- **🔄 Fallback**: Curated free audio for guaranteed playback
-- **🎚️ Quality**: High-quality audio streaming with metadata
+- **🎯 Local Storage**: Songs organized by mood in assets/audio/
+- **� Mood Folders**: Dedicated directories for each emotion
+- **🎚️ Quality**: High-quality local audio files
 
 ## 🛠️ Tech Stack
 
@@ -85,13 +85,13 @@ start-auto.bat
 - **face-api.js** for facial emotion recognition
 - **Node.js/Express** API server for mood analysis
 - **Supabase** for authentication and data storage
-- **Spotify Web API** for music data
+- **Local Music System** for mood-based playlists
 
 ### 🎵 Audio Integration
 
-- **Spotify Web API** with Client Credentials flow
-- **Reliable fallback system** with tested audio URLs
+- **Local Music Library** organized by mood
 - **Cross-platform audio playback** via Expo AV
+- **Emotion-based playlist curation** from local assets
 
 ## 🚀 Quick Start
 
@@ -123,18 +123,21 @@ const supabaseUrl = 'YOUR_SUPABASE_URL';
 const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
 ```
 
-#### Spotify API Setup (Optional)
+#### Local Music Setup
 
-1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Create new app
-3. Update `lib/musicService.ts`:
+1. Add your music files to the mood folders in `assets/audio/`:
 
-```typescript
-const clientId = 'YOUR_SPOTIFY_CLIENT_ID';
-const clientSecret = 'YOUR_SPOTIFY_CLIENT_SECRET';
-```
+   - `happy/` - Upbeat, energetic songs
+   - `sad/` - Melancholic, emotional songs
+   - `angry/` - Rock, intense songs
+   - `calm/` - Peaceful, relaxing songs
+   - `anxious/` - Soothing, calming songs
+   - `surprised/` - Discovery mix songs
+   - `disgusted/` - Alternative, raw songs
 
-For detailed Spotify setup, see: [SPOTIFY-SETUP.md](./SPOTIFY-SETUP.md)
+2. Supported formats: MP3, M4A, WAV
+
+For detailed music setup, see: [LOCAL-MUSIC-SETUP.md](../LOCAL-MUSIC-SETUP.md)
 
 ### 3. Start Development Server
 
@@ -190,8 +193,8 @@ npx expo build:ios
 ### 3. Music Discovery
 
 - **🎵 Smart Playlists**: Auto-generated based on mood
-- **🎯 Spotify Integration**: Real tracks with metadata
-- **🔄 Fallback System**: Guaranteed music playback
+- **🎯 Local Music Library**: Curated songs organized by emotion
+- **🔄 Mood-based Selection**: Automatic playlist curation
 
 ### 4. Music Experience
 
@@ -225,10 +228,10 @@ mood-melodies-app/
 
 #### MusicService (`lib/musicService.ts`)
 
-- **Spotify API integration** with access token management
-- **Smart fallback system** for guaranteed playback
+- **Local music library** with mood-based organization
 - **Cross-platform audio** playback via Expo AV
-- **Error handling** and retry logic
+- **Automatic playlist curation** based on detected emotions
+- **Error handling** and fallback audio files
 
 #### Face API Service (`face-api-service/`)
 
@@ -241,11 +244,11 @@ mood-melodies-app/
 
 ### Music Service Configuration
 
-The app uses a robust music system with multiple sources:
+The app uses a local music system with mood-based organization:
 
-1. **Primary**: Spotify Web API
-2. **Fallback**: Tested audio URLs for guaranteed playback
-3. **Mood Mapping**: Smart genre selection based on emotions
+1. **Local Storage**: Songs organized in assets/audio/ by mood
+2. **Mood Mapping**: Automatic playlist selection based on emotions
+3. **Fallback System**: Demo audio files for guaranteed playback
 
 ### API Endpoints
 
@@ -275,11 +278,12 @@ The app uses a robust music system with multiple sources:
 - Check **network connectivity** between app and server
 - Verify **face-api.js models** are loaded
 
-#### 4. Spotify Integration
+#### 4. Local Music System
 
-- Verify **Client ID and Secret** are correct
-- Check **internet connectivity**
-- Ensure **Spotify app** is not blocking API access
+- Verify **music files** are in correct mood folders
+- Check **file formats** are supported (MP3, M4A, WAV)
+- Ensure **file paths** are accessible
+- Test with **demo audio files** first
 
 ### Debug Mode
 
@@ -287,24 +291,21 @@ Enable detailed logging:
 
 ```typescript
 // In musicService.ts
-console.log(
-  `📊 Spotify tracks: ${songs.length} total, ${tracksWithPreviews.length} with previews`
-);
+console.log(`🎵 Loaded ${songs.length} local songs for ${mood} mood`);
 ```
 
 ## 📚 Documentation
 
 ### Additional Guides
 
-- **[Spotify Setup Guide](./SPOTIFY-SETUP.md)** - Complete Spotify API integration
-- **[Music Playback Guide](./MUSIC-PLAYBACK-GUIDE.md)** - Audio system details
+- **[Local Music Setup](../LOCAL-MUSIC-SETUP.md)** - Complete guide for adding music files
 - **[Testing Guide](./TESTING-GUIDE.md)** - QA and testing procedures
 - **[Startup Guide](./STARTUP-GUIDE.md)** - Detailed setup instructions
 
 ### API Reference
 
 - **Mood Analysis**: POST `/analyze-mood` with image data
-- **Music Search**: Spotify Web API integration
+- **Local Music**: Mood-based playlist system
 - **User Auth**: Supabase authentication flow
 
 ## 🚀 Deployment
@@ -353,7 +354,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 🙏 Acknowledgments
 
 - **face-api.js** for facial emotion recognition
-- **Spotify** for music data and API
+- **Local Music Community** for curated audio collections
 - **Supabase** for backend services
 - **Expo** for cross-platform development
 - **React Native** community for excellent tools

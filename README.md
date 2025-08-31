@@ -2,7 +2,7 @@
 
 **AI-Powered Music Recommendation App Based on Facial Emotion Analysis**
 
-A React Native mobile application that captures your photo, analyzes your mood using AI facial recognition, and provides personalized music playlists from Spotify and other free music sources.
+A React Native mobile application that captures your photo, analyzes your mood using AI facial recognition, and provides personalized music playlists from locally stored songs organized by mood.
 
 ![Mood Melodies App](./assets/images/Logo%20Trans.png)
 
@@ -12,26 +12,26 @@ A React Native mobile application that captures your photo, analyzes your mood u
 
 - **📸 Photo Capture**: Take photos using device camera
 - **🤖 AI Mood Analysis**: Real-time facial emotion detection using face-api.js
-- **🎵 Smart Music Recommendations**: Curated playlists based on detected emotions
+- **🎵 Local Music Library**: Curated local playlists based on detected emotions
 - **🎧 Integrated Music Player**: Play, pause, skip, and control music playback
 - **💾 Mood History**: Track your emotional journey over time
 - **🔐 User Authentication**: Secure login/signup with Supabase
 
 ### 🎭 Supported Emotions
 
-- **😊 Happy** - Upbeat, energetic tracks
-- **😢 Sad** - Melancholic, emotional ballads
-- **😠 Angry** - Rock, intense music
-- **😌 Calm** - Peaceful, relaxing sounds
-- **😰 Anxious** - Soothing, calming melodies
-- **😲 Surprised** - Discovery mix, unexpected genres
-- **🤢 Disgusted** - Alternative, raw music
+- **😊 Happy** - Upbeat, energetic local tracks
+- **😢 Sad** - Melancholic, emotional local ballads
+- **😠 Angry** - Rock, intense local music
+- **😌 Calm** - Peaceful, relaxing local sounds
+- **😰 Anxious** - Soothing, calming local melodies
+- **😲 Surprised** - Discovery mix from local collection
+- **🤢 Disgusted** - Alternative, raw local music
 
-### 🎼 Music Sources
+### 🎼 Music System
 
-- **🎯 Primary**: Spotify Web API (10M+ tracks)
-- **🔄 Fallback**: Curated free audio for guaranteed playback
-- **🎚️ Quality**: High-quality audio streaming with metadata
+- **🎯 Local Storage**: Songs organized by mood in assets/audio/
+- **� Mood Folders**: Dedicated folders for each emotion type
+- **🎚️ Quality**: High-quality local audio files with metadata
 
 ## 🛠️ Tech Stack
 
@@ -53,9 +53,9 @@ A React Native mobile application that captures your photo, analyzes your mood u
 
 ### 🎵 Audio Integration
 
-- **Spotify Web API** with Client Credentials flow
-- **Reliable fallback system** with tested audio URLs
+- **Local Music Library** organized by mood categories
 - **Cross-platform audio playback** via Expo AV
+- **Emotion-based playlist curation** from local assets
 
 ## 🚀 Quick Start
 
@@ -100,13 +100,20 @@ const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
 ./tools/ngrok/ngrok.exe authtoken YOUR_AUTHTOKEN
 ```
 
-#### Spotify API Setup (Optional)
+#### Local Music Setup
 
-1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Create new app
-3. Update music service configuration
+1. Add your music files to the appropriate mood folders:
 
-For detailed Spotify setup, see: [docs/markdown/SPOTIFY-SETUP.md](./docs/markdown/SPOTIFY-SETUP.md)
+   - `assets/audio/happy/` - Upbeat, energetic songs
+   - `assets/audio/sad/` - Melancholic, emotional songs
+   - `assets/audio/angry/` - Rock, intense songs
+   - `assets/audio/calm/` - Peaceful, relaxing songs
+   - `assets/audio/anxious/` - Soothing, calming songs
+   - `assets/audio/surprised/` - Discovery mix songs
+   - `assets/audio/disgusted/` - Alternative, raw songs
+
+2. Supported formats: MP3, M4A, WAV
+3. The app will automatically load songs from these folders based on detected mood
 
 ### 3. One-Command Startup 🚀
 
@@ -182,8 +189,8 @@ npx expo build:ios
 ### 3. Music Discovery
 
 - **🎵 Smart Playlists**: Auto-generated based on detected mood
-- **🎯 Spotify Integration**: Real tracks with metadata
-- **🔄 Fallback System**: Guaranteed music playback
+- **🎯 Local Music Library**: Curated songs organized by emotion
+- **🔄 Mood-based Selection**: Automatic playlist curation
 
 ### 4. Music Experience
 
@@ -259,20 +266,20 @@ mood-melodies-app/
 
 #### Music Service (`lib/musicService.ts`)
 
-- **Spotify API integration** with access token management
-- **Smart fallback system** for guaranteed playback
+- **Local music library** with mood-based organization
 - **Cross-platform audio** playback via Expo AV
-- **Error handling** and retry logic
+- **Automatic playlist curation** based on detected emotions
+- **Error handling** and fallback audio files
 
 ## 🔧 Configuration
 
 ### Music Service Configuration
 
-The app uses a robust music system with multiple sources:
+The app uses a local music system with mood-based organization:
 
-1. **Primary**: Spotify Web API
-2. **Fallback**: Tested audio URLs for guaranteed playback
-3. **Mood Mapping**: Smart genre selection based on emotions
+1. **Local Storage**: Songs organized in assets/audio/ by mood
+2. **Mood Mapping**: Automatic playlist selection based on emotions
+3. **Fallback System**: Demo audio files for guaranteed playback
 
 ### API Endpoints
 
@@ -371,8 +378,7 @@ curl -X POST -H "Content-Type: application/json" \
 ### Additional Guides
 
 - **[Development Guide](./docs/DEV-GUIDE.md)** - Complete development setup
-- **[Spotify Setup Guide](./docs/markdown/SPOTIFY-SETUP.md)** - Spotify API integration
-- **[Music Playback Guide](./docs/markdown/MUSIC-PLAYBACK-GUIDE.md)** - Audio system details
+- **[Face API Setup](./docs/face-api-setup.md)** - Face recognition configuration
 - **[Testing Guide](./docs/markdown/TESTING-GUIDE.md)** - QA and testing procedures
 - **[Startup Guide](./docs/markdown/STARTUP-GUIDE.md)** - Detailed setup instructions
 - **[Tunnel Mode Guide](./docs/markdown/TUNNEL-MODE.md)** - ngrok tunnel configuration
@@ -381,7 +387,7 @@ curl -X POST -H "Content-Type: application/json" \
 
 - **Mood Analysis**: POST `/analyze-mood` with image data
 - **Health Check**: GET `/health` for service status
-- **Music Search**: Spotify Web API integration
+- **Local Music**: Organized mood-based playlist system
 - **User Auth**: Supabase authentication flow
 
 ## 🚀 Deployment
@@ -465,7 +471,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 🙏 Acknowledgments
 
 - **face-api.js** for facial emotion recognition
-- **Spotify** for music data and API
+- **Local Music Community** for curated audio collections
 - **Supabase** for backend services
 - **ngrok** for tunnel access
 - **Expo** for cross-platform development

@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   Alert,
+  PanResponder,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -33,6 +34,8 @@ export default function PlayerScreen() {
   const [playlist, setPlaylist] = useState<MusicPlaylist | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [isPlaybackLoading, setIsPlaybackLoading] = useState(false);
 
   // Load playlist on mount
   useEffect(() => {
@@ -79,7 +82,10 @@ export default function PlayerScreen() {
             const position = Math.floor((status.positionMillis || 0) / 1000);
             const duration = Math.floor((status.durationMillis || 0) / 1000);
 
-            setCurrentTime(position);
+            // Only update time if not seeking
+            if (!isSeeking) {
+              setCurrentTime(position);
+            }
             setDuration(duration);
 
             // Check if song ended
@@ -95,21 +101,25 @@ export default function PlayerScreen() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPlaying, currentSong]);
+  }, [isPlaying, currentSong, isSeeking]);
 
   const togglePlayPause = async () => {
-    if (!currentSong) return;
+    if (!currentSong || isPlaybackLoading) return;
 
     try {
+      setIsPlaybackLoading(true);
+
       if (isPlaying) {
         await musicService.pauseTrack();
         setIsPlaying(false);
       } else {
         if (currentTime === 0) {
           // Start playing the song
+          console.log('🎯 Starting fresh playback');
           await musicService.playTrack(currentSong);
         } else {
           // Resume playing
+          console.log('▶️ Resuming playback');
           await musicService.resumeTrack();
         }
         setIsPlaying(true);
@@ -117,29 +127,79 @@ export default function PlayerScreen() {
     } catch (error) {
       console.error('Error toggling playback:', error);
       Alert.alert('Playback Error', 'Failed to play track. Please try again.');
+      setIsPlaying(false);
+    } finally {
+      setIsPlaybackLoading(false);
     }
   };
 
-  const handlePrevious = () => {
-    if (!playlist || playlist.songs.length === 0) return;
+  const handlePrevious = async () => {
+    if (!playlist || playlist.songs.length === 0 || isPlaybackLoading) return;
 
-    const prevIndex =
-      currentIndex > 0 ? currentIndex - 1 : playlist.songs.length - 1;
-    setCurrentIndex(prevIndex);
-    setCurrentSong(playlist.songs[prevIndex]);
-    setCurrentTime(0);
-    setIsPlaying(false);
+    try {
+      setIsPlaybackLoading(true);
+
+      // Stop current track
+      await musicService.stopTrack();
+
+      const prevIndex =
+        currentIndex > 0 ? currentIndex - 1 : playlist.songs.length - 1;
+      setCurrentIndex(prevIndex);
+      setCurrentSong(playlist.songs[prevIndex]);
+      setCurrentTime(0);
+
+      // Auto-play previous song if currently playing
+      if (isPlaying) {
+        await musicService.playTrack(playlist.songs[prevIndex]);
+      } else {
+        setIsPlaying(false);
+      }
+    } catch (error) {
+      console.error('Error playing previous track:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsPlaybackLoading(false);
+    }
   };
 
-  const handleNext = () => {
-    if (!playlist || playlist.songs.length === 0) return;
+  const handleNext = async () => {
+    if (!playlist || playlist.songs.length === 0 || isPlaybackLoading) return;
 
-    const nextIndex =
-      currentIndex < playlist.songs.length - 1 ? currentIndex + 1 : 0;
-    setCurrentIndex(nextIndex);
-    setCurrentSong(playlist.songs[nextIndex]);
-    setCurrentTime(0);
-    setIsPlaying(false);
+    try {
+      setIsPlaybackLoading(true);
+
+      // Stop current track
+      await musicService.stopTrack();
+
+      const nextIndex =
+        currentIndex < playlist.songs.length - 1 ? currentIndex + 1 : 0;
+      setCurrentIndex(nextIndex);
+      setCurrentSong(playlist.songs[nextIndex]);
+      setCurrentTime(0);
+
+      // Auto-play next song if currently playing
+      if (isPlaying) {
+        await musicService.playTrack(playlist.songs[nextIndex]);
+      } else {
+        setIsPlaying(false);
+      }
+    } catch (error) {
+      console.error('Error playing next track:', error);
+      setIsPlaying(false);
+    } finally {
+      setIsPlaybackLoading(false);
+    }
+  };
+  const handleBack = async () => {
+    try {
+      // Stop music when going back
+      await musicService.cleanup();
+      console.log('🔙 Stopped music and going back');
+      router.back();
+    } catch (error) {
+      console.error('Error during back navigation:', error);
+      router.back(); // Go back anyway
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -148,7 +208,53 @@ export default function PlayerScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleSeek = async (percentage: number) => {
+    if (!currentSong || duration === 0) return;
+
+    try {
+      const seekTime = Math.floor((percentage / 100) * duration);
+      const seekTimeMs = seekTime * 1000;
+
+      console.log(`🎯 Seeking to ${seekTime}s (${seekTimeMs}ms)`);
+      await musicService.setPosition(seekTimeMs);
+      setCurrentTime(seekTime);
+    } catch (error) {
+      console.error('Error seeking:', error);
+    }
+  };
+
   const progressPercentage = (currentTime / duration) * 100;
+
+  // Create PanResponder for seek functionality
+  const progressBarWidth = width - 60; // Account for padding
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+
+    onPanResponderGrant: () => {
+      setIsSeeking(true);
+    },
+
+    onPanResponderMove: (evt) => {
+      const x = evt.nativeEvent.locationX;
+      const percentage = Math.max(
+        0,
+        Math.min(100, (x / progressBarWidth) * 100)
+      );
+      const seekTime = Math.floor((percentage / 100) * duration);
+      setCurrentTime(seekTime);
+    },
+
+    onPanResponderRelease: (evt) => {
+      const x = evt.nativeEvent.locationX;
+      const percentage = Math.max(
+        0,
+        Math.min(100, (x / progressBarWidth) * 100)
+      );
+      handleSeek(percentage);
+      setIsSeeking(false);
+    },
+  });
 
   const getMoodColor = (mood: string): [string, string] => {
     const moodGradients: { [key: string]: [string, string] } = {
@@ -201,10 +307,7 @@ export default function PlayerScreen() {
             ]}
           >
             <Text style={styles.songTitle}>❌ No songs available</Text>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.playButton} onPress={handleBack}>
               <Text style={styles.songTitle}>Go Back</Text>
             </TouchableOpacity>
           </View>
@@ -224,7 +327,7 @@ export default function PlayerScreen() {
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={handleBack}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
@@ -249,11 +352,21 @@ export default function PlayerScreen() {
 
           {/* Progress Bar */}
           <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
+            <View style={styles.progressBar} {...panResponder.panHandlers}>
               <View
                 style={[
                   styles.progressFill,
                   { width: `${progressPercentage}%` },
+                ]}
+              />
+              {/* Seek thumb */}
+              <View
+                style={[
+                  styles.progressThumb,
+                  {
+                    left: `${Math.max(0, Math.min(100, progressPercentage))}%`,
+                    opacity: isSeeking ? 1 : 0.8,
+                  },
                 ]}
               />
             </View>
@@ -375,11 +488,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 2,
     marginBottom: 12,
+    position: 'relative',
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 2,
+  },
+  progressThumb: {
+    position: 'absolute',
+    top: -4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
   timeContainer: {
     flexDirection: 'row',
